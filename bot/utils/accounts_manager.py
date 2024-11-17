@@ -58,7 +58,11 @@ class AccountsManager:
                     f"Do you want to add session {session_name} to accounts.json? [Y/n]: "
                 )
 
-                if not user_response or user_response.lower() == "y":
+                if (
+                    not user_response
+                    or user_response.lower() == "y"
+                    or user_response.lower() == "yes"
+                ):
                     await register_sessions(session_name=session_name)
                     available_accounts.append(
                         json_manager.load_from_json(

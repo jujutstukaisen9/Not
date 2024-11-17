@@ -45,7 +45,15 @@ async def process() -> None:
                 break
 
     if action == 1:
-        await register_sessions()
+        while True:
+            await register_sessions()
+
+            answer = input("Do you want to register another session? [Y/n]: ")
+
+            if not answer or answer.lower() == "y" or answer.lower() == "yes":
+                continue
+
+            break
     elif action == 2:
         accounts = await AccountsManager().get_accounts()
         await run_tasks(accounts=accounts)
@@ -76,9 +84,7 @@ async def run_tasks(accounts: List[Dict[str, str]]) -> None:
             )
             task.set_name(session_name)
 
-            tasks.append(
-                task
-            )
+            tasks.append(task)
 
         await asyncio.gather(*tasks)
     except Exception as error:
