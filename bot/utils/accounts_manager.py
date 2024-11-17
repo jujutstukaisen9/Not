@@ -38,9 +38,6 @@ class AccountsManager:
 
         accounts = json_manager.load_from_json(path="accounts.json")
 
-        if not accounts:
-            raise ValueError("No accounts found, please run register session first")
-
         available_accounts = []
 
         for session_name in session_names:
@@ -48,7 +45,7 @@ class AccountsManager:
                 (
                     account
                     for account in accounts
-                    if account["session_name"] == session_name
+                    if account.get("session_name") == session_name  # type: ignore
                 ),
                 None,
             )
@@ -63,6 +60,10 @@ class AccountsManager:
 
                 if not user_response or user_response.lower() == "y":
                     await register_sessions(session_name=session_name)
-                    available_accounts.append(session_name)
+                    available_accounts.append(
+                        json_manager.load_from_json(
+                            path="accounts.json", session_name=session_name
+                        )
+                    )
 
         return available_accounts
