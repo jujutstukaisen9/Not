@@ -1,7 +1,7 @@
 import asyncio
 import json
 from typing import Dict
-from urllib.parse import parse_qs, quote, unquote
+from urllib.parse import parse_qs, unquote
 
 import pyrogram
 from better_proxy import Proxy
@@ -58,21 +58,17 @@ class TelegramMiniAppAuth:
             )
 
             telegram_web_data = unquote(
-                unquote(
-                    web_view.url.split("tgWebAppData=")[1].split("tgWebAppVersion")[0]
-                )
+                web_view.url.split("tgWebAppData=")[1].split("&tgWebAppVersion")[0]
             )
 
             query_params = parse_qs(telegram_web_data)
             user_data = self._get_user_data(query_params)
 
-            init_data = self._create_init_data(query_params, self.start_param)
-
             if self._telegram_client.is_connected:
                 await self._telegram_client.disconnect()
 
             tg_auth_app_data = {
-                "init_data": init_data,
+                "init_data": telegram_web_data,
                 "auth_url": web_view.url,
                 "user_data": user_data,
             }
@@ -120,22 +116,3 @@ class TelegramMiniAppAuth:
         parsed_user_data["is_premium_user"] = user_data.get("is_premium_user", False)
 
         return parsed_user_data
-
-    def _create_init_data(self, query_params, start_param):
-        user_data_encoded = quote(query_params["user"][0])
-        auth_date = query_params["auth_date"][0]
-        hash_value = query_params["hash"][0]
-        chat_param = self._get_chat_param(query_params)
-        start_param = (
-            f"&start_param={self.start_param}" if getattr(self, "start_param") else ""
-        )
-        return f"user={user_data_encoded}{chat_param}{start_param}&auth_date={auth_date}&hash={hash_value}"
-
-    def _get_chat_param(self, query_params):
-        chat_instance = query_params.get("chat_instance", [None])[0]
-        chat_type = query_params.get("chat_type", [None])[0]
-        return (
-            f"&chat_instance={chat_instance}&chat_type={chat_type}"
-            if chat_instance and chat_type
-            else ""
-        )
