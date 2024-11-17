@@ -23,6 +23,9 @@ from bot.utils.logger import dev_logger, logger
 
 
 class NotPXBot:
+    RETRY_ITERATION_DELAY = 10 * 60  # 10 minutes
+    RETRY_DELAY = 5  # 5 seconds
+
     def __init__(
         self, telegram_client: Client, websocket_manager: WebSocketManager
     ) -> None:
@@ -117,8 +120,8 @@ class NotPXBot:
                 await asyncio.sleep(sleep_time)
             except Exception as error:
                 handle_error(self.session_name, error)
-                logger.info(f"{self.session_name} | Retrying in 60 seconds")
-                await asyncio.sleep(60)
+                logger.info(f"{self.session_name} | Retrying in {self.RETRY_ITERATION_DELAY} seconds")
+                await asyncio.sleep(self.RETRY_ITERATION_DELAY)
 
     async def _proxy_checker(self, session: aiohttp.ClientSession, proxy: str):
         try:
@@ -234,9 +237,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to get info about me, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to get info about me, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._get_me(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while getting info about me")
 
@@ -274,9 +277,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to send tganalytics event, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to send tganalytics event, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._send_tganalytics_event(
                     session=session, attempts=attempts + 1
                 )
@@ -323,9 +326,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to send plausible event, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to send plausible event, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._send_plausible_event(
                     session=session, payload=payload, attempts=attempts + 1
                 )
@@ -382,9 +385,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to claim px, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to claim px, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._claim_px(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while claiming px")
 
@@ -434,9 +437,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to set template, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to set template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._set_template(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while setting template")
 
@@ -465,9 +468,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to check my, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to check my, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._check_my(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while checking my")
 
@@ -497,9 +500,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to get status, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to get status, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 return await self._get_status(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while getting status")
 
@@ -528,9 +531,9 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to upgrade boosts, retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to upgrade boosts, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 await self._upgrade_boosts(session=session, attempts=attempts + 1)
             else:
                 raise Exception(f"{self.session_name} | Error while upgrading boosts")
@@ -693,10 +696,10 @@ class NotPXBot:
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to paint pixels, changing template and retrying in 5 seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to paint pixels, changing template and retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await self._set_template(session)
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.RETRY_DELAY)
                 await self._paint_pixels(session=session, attempts=attempts + 1)
             else:
                 raise Exception(
