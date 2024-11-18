@@ -228,7 +228,7 @@ Set-ExecutionPolicy Unrestricted -Scope CurrentUser
 Хорошо, теперь мы готовы. Выполните следующие команды:
 
 ```shell
-Invoke-WebRequest -Uri "https://github.com/Dellenoam/NotPixelBot/blob/master/windows_scripts/install.ps1" -OutFile "$env:TEMP\install.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/refs/heads/master/windows_scripts/install.ps1" -OutFile "$env:TEMP\install.ps1"
 
 powershell -ExecutionPolicy Bypass -File "$env:TEMP\install.ps1"
 ```
@@ -244,7 +244,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\install.ps1"
 Если вы хотите удалить NotPixelBot, выполните следующие команды:
 
 ```shell
-Invoke-WebRequest -Uri "https://github.com/Dellenoam/NotPixelBot/blob/master/windows_scripts/uninstall.ps1" -OutFile "$env:TEMP\uninstall.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/refs/heads/master/windows_scripts/uninstall.ps1" -OutFile "$env:TEMP\uninstall.ps1"
 
 powershell -ExecutionPolicy Bypass -File "$env:TEMP\uninstall.ps1"
 ```
