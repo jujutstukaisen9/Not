@@ -1,6 +1,8 @@
+🇷🇺 [Russian README](https://github.com/Dellenoam/NotPixelBot/blob/master/README_RU.md)
+
 # NotPX Bot ⬛
 
-Automated script for NotPixel with painting on canvas using a template, passing in-game proof-of-humanity checks and more 
+Automated script for NotPixel with painting on canvas using a template, passing proof-of-humanity checks and more 
 
 ## Requirements
 
@@ -18,11 +20,11 @@ Automated script for NotPixel with painting on canvas using a template, passing 
   </thead>
   <tbody>
     <tr>
-      <td>SuperMegaCool Capybara intro included</td>
+      <td>SuperMegaCool Capybara intro</td>
       <td>✅</td>
     </tr>
     <tr>
-      <td>Passing in-game proof-of-humanity checks</td>
+      <td>Passing proof-of-humanity checks</td>
       <td>✅</td>
     </tr>
     <tr>
@@ -30,11 +32,11 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td><img src="https://img.shields.io/badge/Work_in_Progress-orange?style=flat-square" alt="X badge"></td>
     </tr>
     <tr>
-      <td>Packaged .exe file</td>
+      <td>Script in .exe</td>
       <td>❌</td>
     </tr>
     <tr>
-      <td>Easy install and uninstall scripts</td>
+      <td>Simple scripts for installation and uninstallation</td>
       <td>✅</td>
     </tr>
     <tr>
@@ -62,7 +64,7 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td><img src="https://img.shields.io/badge/Work_in_Progress-orange?style=flat-square" alt="X badge"></td>
     </tr>
     <tr>
-      <td>Auto-claim px</td>
+      <td>Auto-claim PX</td>
       <td>✅</td>
     </tr>
     <tr>
@@ -70,7 +72,7 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td>✅</td>
     </tr>
     <tr>
-      <td>Night sleep mode</td>
+      <td>Night mode</td>
       <td>✅</td>
     </tr>
     <tr>
@@ -86,59 +88,29 @@ Automated script for NotPixel with painting on canvas using a template, passing 
 
 ![Capybara Intro](https://github.com/Dellenoam/NotPixelBot/blob/master/assets/Capybara_Intro.gif)
 
-### 📝 Shortly about in-game events check
+### 🔍 Proof-of-Humanity checks
 
-We are passing proof-of-humanity checks with a real task solution instead of using random responses like other public scripts do.
+We use **real** task solutions for proof-of-humanity checks instead of random responses, so you don't get banned.
 
-### 📊 Detailed about in-game events check
+There is still a chance of being banned, but it we did everything possible to prevent it.
 
-In the game, there are several types of events, which are collectively referred to as **proof-of-humanity events**. And our script is passing them with a real task solution instead of using random responses like other public scripts do.
+### 🎨 Auto-Painting
 
-    🔹 TGAalytics Events: These events occur in various situations, but primarily when a player logs into the game. When a player successfully enters the game, a tganalytics event is triggered, sending a signal to the server indicating that the login was successful.
-    🔹 Plausible Events: These events is sent every time the player performs an in-game action. For example, it can be triggered when a player enters a shop to make purchases or decides to change the paint template.
+We don't use random coordinates to paint on the canvas.
 
-The key aspect of plausible events is that they automatically send an event containing a reference to the location the player has navigated to. For instance, if the player enters a shop, the event will include:
+Our script automatically paints on the canvas using a template using data received from the websocket connection. It means that you will receive a PX for each painting you make!
 
-    🔹 A link to that shop
-    🔹 The type of event
-    🔹 The base URL from which the action originated
+### 🌟 Simple scripts to install NotPixelBot and uninstall it
 
-In contrast, tganalytics events have specific requirements. These events necessitate the completion of a task or challenge, which the player must solve in order to generate a valid response that is then sent back to the server. Unlike plausible events, which occur passively, tganalytics events demand in-game scripts to meet the conditions for the event to be registered.
+We provide simple scripts for easy installation and uninstallation of the NotPixelBot.
 
-### ⚠️ Again about in-game events check
+### 🔗 We have a clear use of ref system
 
-Passing these checks with a real solution is important, as the project can shave you on this point, so using our script you slightly but secure yourself from this incident
+If you change the ref id to your own in the settings, that's what it will be. Our script does not prevent you from doing this, unlike some public scripts.
 
-### 📝 Shortly about auto-painting
+### 🚀 Regular updates
 
-Our script can paint on the canvas using real-time updated data instead of random pixels like the rest of the public scripts. This means that you will typically receive PX for painting, provided that no one has changed the color of that pixel during that time.
-
-### 📊 Detailed about auto-painting
-
-The game retrieves the canvas through an API and then initiates a WebSocket connection to update it. Once the connection is established, the game decodes the incoming data and utilizes this information to refresh the template. Our script fully implements this functionality, ensuring that your canvas is always up to date.
-For pixel painting, we employ an algorithm that identifies pixels on the canvas that have different colors compared to the template. As soon as such a pixel is detected, we send a request to paint it. This means that you will almost always receive PX for painting according to the template on the canvas.
-However, there are instances when the painting process may fail. This can occur if the script does not manage to paint the pixel before another user does, which can happen even with a real person. Thus, while our script optimizes the painting process, occasional delays may lead to missed opportunities for painting specific pixels.
-
-### ⚠️ Again about auto-painting
-
-Most scripts rely on random pixel painting, which can be easily detected by the game. This method not only increases the likelihood of being flagged by game but also means that you will not receive any PX, as any painting outside of the template will give you 0 PX.
-
-#### 🚩 Risks of Alternative Methods
-
-Additionally, if you utilize different methods for identifying pixels, such as:
-
-    Using pixel information via the API
-    Retrieving the canvas via the API before each painting action
-
-These practices can also have negative implications. The game may scrutinize your activity more closely, leading to potential penalties or bans.
-
-#### 🌟 Our Solution
-
-Our script addresses these issues, offering a slight improvement in your situation. By focusing on legitimate pixel painting strategies that align with the game's mechanics, you can enhance your chances of successfully earning PX while minimizing the risk of detection.
-
-### 🔗 We have a clear use of referrals
-
-If you use change referral id to your own in the settings, it will be. Our script does not prevent you from doing this, unlike some public scripts.
+We update NotPixelBot according to changes in NotPixel.
 
 ## [Settings](https://github.com/Dellenoam/NotPixelBot/blob/master/.env-example)
 
@@ -268,7 +240,7 @@ Well, now you can proceed to the [Run the script](#run-the-script) section.
 
 ## Windows uninstallation using powershell script
 
-<span style="color: red;">NOTE: The install.ps1 script installs Chocolatey, which is then used to install Python, Git, and Node.js. This uninstall.ps1 script will also uninstall these programs using Chocolatey, including Chocolatey itself. However, it will not remove the NotPixelBot folder. Therefore, please be cautious and ensure you manually delete the NotPixelBot folder if needed.</span>
+NOTE: The install.ps1 script installs Chocolatey, which is then used to install Python, Git, and Node.js. This uninstall.ps1 script will also uninstall these programs using Chocolatey, including Chocolatey itself. However, it will not remove the NotPixelBot folder. Therefore, please be cautious.
 
 If you want to uninstall NotPixelBot, run following commands:
 
