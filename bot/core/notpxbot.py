@@ -154,7 +154,7 @@ class NotPXBot:
             f"initData {tg_auth_app_data['init_data']}"
         )
 
-        await self._send_tganalytics_event(session)
+        # await self._send_tganalytics_event(session)
 
         plausible_payload = await self._create_plausible_payload(auth_url)
         await self._send_plausible_event(session, plausible_payload)
