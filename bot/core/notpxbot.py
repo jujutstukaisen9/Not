@@ -145,7 +145,7 @@ class NotPXBot:
 
         tg_mini_app_auth = TelegramMiniAppAuth(self.telegram_client, proxy=self.proxy)
         tg_auth_app_data = await tg_mini_app_auth._get_telegram_web_data(
-            "notpixel", "app", settings.REF_ID
+            "notpixel", "app", settings.REF_ID if settings.USE_REF else None
         )
 
         auth_url = tg_auth_app_data["auth_url"]

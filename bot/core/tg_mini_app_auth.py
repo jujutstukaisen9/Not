@@ -27,7 +27,7 @@ class TelegramMiniAppAuth:
         self.start_param = None
 
     async def _get_telegram_web_data(
-        self, peer_id: str, short_name: str, start_param: str, attempt: int = 1
+        self, peer_id: str, short_name: str, start_param: str | None, attempt: int = 1
     ):
         try:
             if self.proxy:
