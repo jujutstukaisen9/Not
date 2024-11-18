@@ -72,6 +72,7 @@ try {
     
     Write-Host "Cloning NotPixelBot repository..." -ForegroundColor Cyan
     git clone https://github.com/Dellenoam/NotPixelBot $gitClonePath
+    git config --global --add safe.directory $gitClonePath
     Set-Location $gitClonePath
 } catch {
     Write-Host "Couldn't git clone NotPixelBot repository. Error: $_" -ForegroundColor Red
@@ -90,7 +91,7 @@ try {
     Write-Host "Installing dependencies using poetry..." -ForegroundColor Cyan
     poetry install --only main
 
-    Write-Host "Congratulations, you can now run NotPixelBot. Check the 'Run the script' section in README.md for details." -ForegroundColor Green
+    Write-Host "Congratulations, you can now run NotPixelBot via start.bat or manually. Check the 'Run the script' section in README.md for details." -ForegroundColor Green
     Read-Host -Prompt "Press Enter to exit"
 } catch {
     Write-Host "Couldn't install NotPixelBot dependencies. Error: $_" -ForegroundColor Red

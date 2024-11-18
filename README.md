@@ -213,7 +213,7 @@ copy .env-example .env
 
 ## Windows installation using powershell script
 
-<span style="color: yellow">NOTE: The install.ps1 script installs Chocolatey, a package manager for Windows, and uses it to install Python, Git, and NodeJS, if they are not already installed</span>
+NOTE: The install.ps1 script installs Chocolatey, a package manager for Windows, and uses it to install Python, Git, and NodeJS, if they are not already installed
 
 We have also created powershell script which allows you to easily install NotPixelBot on Windows. So far it has been
 tested only on Windows 10, but also on Windows 11 with minor issues (maybe you woun't have any)
@@ -253,6 +253,13 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\uninstall.ps1"
 ## Run the script
 
 ![NotPixel Intro](https://github.com/Dellenoam/NotPixelBot/blob/master/assets/NotPixel_Intro.gif)
+
+
+### Using start.bat
+
+You can run the script using start.bat script, just execute it.
+
+### Manually
 
 Before running the script, you always need to activate the virtual environment.
 

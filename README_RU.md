@@ -253,6 +253,12 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\uninstall.ps1"
 
 ![NotPixel Intro](https://github.com/Dellenoam/NotPixelBot/blob/master/assets/NotPixel_Intro.gif)
 
+### Используя start.bat
+
+Вы можете запустить скрипт используя start.bat скрипт, просто запустите его.
+
+### Вручную
+
 Перед запуском скрипта вам всегда нужно активировать виртуальное окружение.
 
 ```shell
