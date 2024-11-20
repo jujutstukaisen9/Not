@@ -174,6 +174,10 @@
       <td>PAINT_PIXELS</td>
       <td>True/False авторисование</td>
     </tr>
+    <tr>
+      <td>COMPLETE_TASKS</td>
+      <td>True/False auto-completing tasks</td>
+    </tr>
   </tbody>
 </table>
 

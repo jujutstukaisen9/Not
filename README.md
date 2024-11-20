@@ -174,6 +174,10 @@ We update NotPixelBot according to changes in NotPixel.
       <td>PAINT_PIXELS</td>
       <td>True/False auto-painting</td>
     </tr>
+    <tr>
+      <td>COMPLETE_TASKS</td>
+      <td>True/False auto-completing tasks</td>
+    </tr>
   </tbody>
 </table>
 
