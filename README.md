@@ -29,7 +29,7 @@ Automated script for NotPixel with painting on canvas using a template, passing 
     </tr>
     <tr>
       <td>NotPX API change detection</td>
-      <td><img src="https://img.shields.io/badge/Work_in_Progress-orange?style=flat-square" alt="X badge"></td>
+      <td>✅</td>
     </tr>
     <tr>
       <td>Script in .exe</td>
@@ -57,7 +57,7 @@ Automated script for NotPixel with painting on canvas using a template, passing 
     </tr>
     <tr>
       <td>Auto-tasks</td>
-      <td><img src="https://img.shields.io/badge/Work_in_Progress-orange?style=flat-square" alt="X badge"></td>
+      <td>✅</td>
     </tr>
     <tr>
       <td>Auto-use bombs</td>

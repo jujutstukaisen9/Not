@@ -29,7 +29,7 @@
     </tr>
     <tr>
       <td>Обнаружение изменений в API NotPixel</td>
-      <td><img src="https://img.shields.io/badge/В_разработке-orange?style=flat-square" alt="X badge"></td>
+      <td>✅</td>
     </tr>
     <tr>
       <td>Скрипт в .exe</td>
@@ -57,7 +57,7 @@
     </tr>
     <tr>
       <td>Автоматические задания</td>
-      <td><img src="https://img.shields.io/badge/В_разработке-orange?style=flat-square" alt="X badge"></td>
+      <td>✅</td>
     </tr>
     <tr>
       <td>Автоматическое использование бомб</td>
