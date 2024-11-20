@@ -19,6 +19,9 @@ if exist ".venv\Scripts\activate" (
     exit /b
 )
 
+echo Installing requirements...
+call poetry install --only main
+
 echo Running the script...
 python main.py
 
