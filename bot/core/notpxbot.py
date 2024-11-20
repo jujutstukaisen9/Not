@@ -120,7 +120,7 @@ class NotPXBot:
                     if proxy:
                         await self._proxy_checker(session, proxy)
 
-                    await self._execute_main_loop(session, self.telegram_client)
+                    await self._perform_notpx_actions(session, self.telegram_client)
 
                 minutes_to_sleep = random.randint(
                     settings.ITERATION_SLEEP_MINUTES[0],
@@ -154,7 +154,7 @@ class NotPXBot:
         except Exception:
             raise Exception(f"{self.session_name} | Proxy error | {proxy}")
 
-    async def _execute_main_loop(self, session: aiohttp.ClientSession, telegram_client):
+    async def _perform_notpx_actions(self, session: aiohttp.ClientSession, telegram_client):
         if settings.SLEEP_AT_NIGHT:
             await self._handle_night_sleep()
 
