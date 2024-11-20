@@ -1,6 +1,7 @@
 import asyncio
 import io
 import random
+import sys
 import traceback
 from datetime import datetime
 from random import choice, randint
@@ -18,6 +19,7 @@ from pyrogram.client import Client
 from bot.config.config import settings
 from bot.core.canvas_updater.dynamic_canvas_renderer import DynamicCanvasRenderer
 from bot.core.canvas_updater.websocket_manager import WebSocketManager
+from bot.core.notpx_api_checker import NotPXAPIChecker
 from bot.core.tg_mini_app_auth import TelegramMiniAppAuth
 from bot.utils.logger import dev_logger, logger
 
@@ -70,6 +72,7 @@ class NotPXBot:
             "leagueBonusPlatinum": "leagueBonusPlatinum",
             "pixelInNickname": "pixelInNickname",
         }
+        self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
         base_headers = {
@@ -155,6 +158,10 @@ class NotPXBot:
         if settings.SLEEP_AT_NIGHT:
             await self._handle_night_sleep()
 
+        if not await self._notpx_api_checker.check_api(session, self._headers["notpx"]):
+            logger.critical("NotPX API has been changed!")
+            sys.exit(1)
+
         tg_mini_app_auth = TelegramMiniAppAuth(self.telegram_client, proxy=self.proxy)
         tg_auth_app_data = await tg_mini_app_auth._get_telegram_web_data(
             "notpixel", "app", settings.REF_ID if settings.USE_REF else None
@@ -162,6 +169,7 @@ class NotPXBot:
 
         auth_url = tg_auth_app_data["auth_url"]
         self.user_data = tg_auth_app_data["user_data"]
+
         self._headers["notpx"]["Authorization"] = (
             f"initData {tg_auth_app_data['init_data']}"
         )

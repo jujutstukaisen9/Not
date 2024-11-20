@@ -86,7 +86,7 @@ async def run_tasks(accounts: List[Dict[str, str]]) -> None:
 
             tasks.append(task)
 
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
     except Exception as error:
         logger.error(f"{error or 'Something went wrong'}")
         dev_logger.error(f"{traceback.format_exc()}")
