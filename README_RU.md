@@ -168,15 +168,15 @@
     </tr>
     <tr>
       <td>UPGRADE_BOOSTS</td>
-      <td>True/False автоматическое улучшение бустеров</td>
+      <td>True/False авто прокачка бустеров</td>
     </tr>
     <tr>
       <td>PAINT_PIXELS</td>
-      <td>True/False авторисование</td>
+      <td>True/False авто рисование</td>
     </tr>
     <tr>
       <td>COMPLETE_TASKS</td>
-      <td>True/False auto-completing tasks</td>
+      <td>True/False авто выполнение заданий</td>
     </tr>
   </tbody>
 </table>
