@@ -1,12 +1,13 @@
+import re
 import traceback
 from urllib.parse import urlparse
 
 from pyrogram.client import Client
 
 from bot.config.config import settings
-from bot.utils.ua_generator import generate_user_agent
 from bot.utils.json_manager import JsonManager
 from bot.utils.logger import dev_logger, logger
+from bot.utils.ua_generator import generate_user_agent
 
 
 async def register_sessions(session_name: str | None = None) -> None:
@@ -27,14 +28,14 @@ async def register_sessions(session_name: str | None = None) -> None:
             "Enter proxy in format type://ip:port@username:password (Enter to skip): "
         )
 
+        user_agent = generate_user_agent()
+
         session = await get_telegram_client(
-            session_name=session_name, raw_proxy=raw_proxy
+            session_name=session_name, user_agent=user_agent, raw_proxy=raw_proxy
         )
 
         async with session:
             user_data = await session.get_me()
-
-        user_agent = generate_user_agent()
 
         json_manager = JsonManager()
 
@@ -56,14 +57,25 @@ async def register_sessions(session_name: str | None = None) -> None:
 
 
 async def get_telegram_client(
-    session_name: str, raw_proxy: str | None = None
+    session_name: str, user_agent: str, raw_proxy: str | None = None
 ) -> Client:
     try:
         if not session_name:
             raise ValueError("Session name cannot be empty")
 
+        if not user_agent:
+            raise ValueError("User agent cannot be empty")
+
         if not settings.API_ID or not settings.API_HASH:
             raise ValueError("API_ID and API_HASH must be set in .env file")
+
+        device_model = re.search(r"Android ([\d.]+); ([\w\s]+)\)", user_agent)
+
+        if not device_model:
+            raise ValueError("Invalid user agent")
+
+        system_version = device_model.group(1)
+        device_name = device_model.group(2)
 
         parsed_proxy = urlparse(raw_proxy) if raw_proxy else None
 
@@ -85,6 +97,9 @@ async def get_telegram_client(
             api_hash=settings.API_HASH,
             proxy=proxy_dict,  # type: ignore
             workdir="sessions",
+            device_model=device_name,
+            system_version=system_version,
+            app_version="Telegram Android 11.4.2",
         )
 
         return telegram_client
