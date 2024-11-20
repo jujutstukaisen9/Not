@@ -6,8 +6,10 @@ annotated-types==0.7.0
 async-timeout==5.0.1
 asyncio==3.4.3
 attrs==24.2.0
+beautifulsoup4==4.12.3
 better-proxy==1.2.0
 Brotli==1.1.0
+bs4==0.0.2
 build==1.2.2.post1
 CacheControl==0.14.1
 certifi==2024.8.30
@@ -57,6 +59,7 @@ RapidFuzz==3.10.1
 requests==2.32.3
 requests-toolbelt==1.0.0
 shellingham==1.5.4
+soupsieve==2.6
 TgCrypto==1.2.5
 tomli==2.1.0
 tomlkit==0.13.2
