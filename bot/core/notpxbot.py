@@ -72,6 +72,7 @@ class NotPXBot:
             "leagueBonusPlatinum": "leagueBonusPlatinum",
             "pixelInNickname": "pixelInNickname",
         }
+        self._tasks_to_complete = {}
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
@@ -154,7 +155,9 @@ class NotPXBot:
         except Exception:
             raise Exception(f"{self.session_name} | Proxy error | {proxy}")
 
-    async def _perform_notpx_actions(self, session: aiohttp.ClientSession, telegram_client):
+    async def _perform_notpx_actions(
+        self, session: aiohttp.ClientSession, telegram_client
+    ):
         if settings.SLEEP_AT_NIGHT:
             await self._handle_night_sleep()
 
@@ -219,8 +222,11 @@ class NotPXBot:
 
         if settings.CLAIM_PX:
             await self._claim_px(session)
-        if self._tasks_to_complete:
-            await self.auto_complete_tasks(session, telegram_client, self._tasks_to_complete)
+
+        if settings.COMPLETE_TASKS and self._tasks_to_complete:
+            await self._task_completion(
+                session, telegram_client, self._tasks_to_complete
+            )
 
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
@@ -516,7 +522,6 @@ class NotPXBot:
             self._charges = response_json.get("charges")
 
             self._completed_tasks = response_json.get("tasks")
-            self._tasks_to_complete = {}
             for task in self._tasks_list:
                 if task not in self._completed_tasks:
                     self._tasks_to_complete[task] = self._tasks_list[task]
@@ -742,7 +747,13 @@ class NotPXBot:
                     f"{self.session_name} | Max retry attempts reached while painting pixels"
                 )
 
-    async def auto_complete_tasks(self, session: aiohttp.ClientSession, telegram_client: Client, tasks_to_complete: Dict, attempts: int = 1) -> None:
+    async def _task_completion(
+        self,
+        session: aiohttp.ClientSession,
+        telegram_client: Client,
+        tasks_to_complete: Dict,
+        attempts: int = 1,
+    ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
                 "https://app.notpx.app/claiming"
@@ -750,7 +761,9 @@ class NotPXBot:
             await self._send_plausible_event(session, plausible_payload)
 
             twitter_keys = [key for key in tasks_to_complete if key.startswith("x:")]
-            channel_keys = [key for key in tasks_to_complete if key.startswith("channel:")]
+            channel_keys = [
+                key for key in tasks_to_complete if key.startswith("channel:")
+            ]
 
             if twitter_keys:
                 for key in twitter_keys:
@@ -762,11 +775,14 @@ class NotPXBot:
                     response.raise_for_status()
                     response_json = await response.json()
                     if response_json.get("x:" + twitter_account):
-                        logger.info(f"{self.session_name} | Completed task: {twitter_account} on X.com")
+                        logger.info(
+                            f"{self.session_name} | Completed task: {twitter_account} on X.com"
+                        )
                     else:
-                        logger.warning(f"{self.session_name} | Failed to complete task: {twitter_account} on X.com")
+                        logger.warning(
+                            f"{self.session_name} | Failed to complete task: {twitter_account} on X.com"
+                        )
                     await asyncio.sleep(random.uniform(4.95, 6.35))
-
 
             if channel_keys:
                 for key in channel_keys:
@@ -784,7 +800,6 @@ class NotPXBot:
                     logger.info(f"{self.session_name} | Completed task: Join {channel}")
                     await asyncio.sleep(random.uniform(4.95, 6.35))
 
-
             plausible_payload = await self._create_plausible_payload(
                 "https://app.notpx.app/"
             )
@@ -796,12 +811,18 @@ class NotPXBot:
                     f"{self.session_name} | Failed to complete tasks, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self.auto_complete_tasks(session=session, telegram_client=telegram_client, tasks_to_complete=tasks_to_complete, attempts=attempts + 1)
+                await self._task_completion(
+                    session=session,
+                    telegram_client=telegram_client,
+                    tasks_to_complete=tasks_to_complete,
+                    attempts=attempts + 1,
+                )
             else:
                 raise Exception(
                     f"{self.session_name} | Max retry attempts reached while completing tasks"
                 )
-             
+
+
 def handle_error(session_name, error: Exception) -> None:
     logger.error(f"{error.__str__() if error else 'NotPXBot | Something went wrong'}")
     dev_logger.error(f"{session_name} | {traceback.format_exc()}")

@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     CLAIM_PX: bool = True
     UPGRADE_BOOSTS: bool = True
     PAINT_PIXELS: bool = True
+    COMPLETE_TASKS: bool = True
 
 
 settings = Settings()  # type: ignore
