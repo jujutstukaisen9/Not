@@ -65,7 +65,7 @@ async def run_tasks(accounts: List[Dict[str, str]]) -> None:
         for account in accounts:
             session_name, user_agent, raw_proxy = account.values()
             telegram_client = await get_telegram_client(
-                session_name=session_name, raw_proxy=raw_proxy
+                session_name=session_name, user_agent=user_agent, raw_proxy=raw_proxy
             )
             proxy = Proxy.from_str(proxy=raw_proxy).as_url if raw_proxy else None
 
