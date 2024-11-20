@@ -69,7 +69,7 @@ async def get_telegram_client(
         if not settings.API_ID or not settings.API_HASH:
             raise ValueError("API_ID and API_HASH must be set in .env file")
 
-        device_model = re.search(r"Android ([\d.]+); ([\w\s]+)\)", user_agent)
+        device_model = re.search(r"Android ([\d.]+); ([\w\s-]+)", user_agent)
 
         if not device_model:
             raise ValueError("Invalid user agent")
