@@ -37,7 +37,7 @@ class NotPXAPIChecker:
 
             script_tags = soup.find_all("script")
 
-            pattern = re.compile(r"/assets/index-[a-zA-Z0-9]+\.js")
+            pattern = re.compile(r"/assets/index-.*\.js")
             result = None
 
             for tag in script_tags:
@@ -47,6 +47,7 @@ class NotPXAPIChecker:
                     break
 
             if not result:
+                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
                 return False
 
             js_url = f"{self.BASE_URL}{result}"
@@ -58,11 +59,13 @@ class NotPXAPIChecker:
             match = re.search(r'VITE_API_URL:\s*"([^"]+)"', js_content)
 
             if not match:
+                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
                 return False
 
             api_url = match.group(1)
 
             if api_url != "https://notpx.app/api/v1/":
+                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
                 return False
 
             return True
