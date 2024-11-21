@@ -24,6 +24,10 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td>✅</td>
     </tr>
     <tr>
+      <td>Tournament update</td>
+      <td>✅</td>
+    </tr>
+    <tr>
       <td>Passing proof-of-humanity checks</td>
       <td>✅</td>
     </tr>
@@ -147,6 +151,10 @@ We update NotPixelBot according to changes in NotPixel.
       <td>Referral ID to be used</td>
     </tr>
     <tr>
+      <td>TOURNAMENT_TEMPLATE_ID</td>
+      <td>ID of the tournament template</td>
+    </tr>
+    <tr>
       <td>SLEEP_AT_NIGHT</td>
       <td>True/False sleep at night</td>
     </tr>
@@ -177,6 +185,10 @@ We update NotPixelBot according to changes in NotPixel.
     <tr>
       <td>COMPLETE_TASKS</td>
       <td>True/False auto-completing tasks</td>
+    </tr>
+    <tr>
+      <td>PARTICIPATE_IN_TOURNAMENT</td>
+      <td>True/False participate in tournament</td>
     </tr>
   </tbody>
 </table>

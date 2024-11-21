@@ -24,6 +24,10 @@
       <td>✅</td>
     </tr>
     <tr>
+      <td>Турнирное обновление</td>
+      <td>✅</td>
+    </tr>
+    <tr>
       <td>Прохождение proof-of-humanity проверок</td>
       <td>✅</td>
     </tr>
@@ -147,6 +151,10 @@
       <td>Реферер ID для использования</td>
     </tr>
     <tr>
+      <td>TOURNAMENT_TEMPLATE_ID</td>
+      <td>ID турнирного шаблона</td>
+    </tr>
+    <tr>
       <td>SLEEP_AT_NIGHT</td>
       <td>True/False спать ночью</td>
     </tr>
@@ -177,6 +185,10 @@
     <tr>
       <td>COMPLETE_TASKS</td>
       <td>True/False авто выполнение заданий</td>
+    </tr>
+    <tr>
+      <td>PARTICIPATE_IN_TOURNAMENT</td>
+      <td>True/False участие в турнире</td>
     </tr>
   </tbody>
 </table>
