@@ -231,8 +231,7 @@ copy .env-example .env
 
 NOTE: The install.ps1 script installs Chocolatey, a package manager for Windows, and uses it to install Python, Git, and NodeJS, if they are not already installed
 
-We have also created powershell script which allows you to easily install NotPixelBot on Windows. So far it has been
-tested only on Windows 10, but also on Windows 11 with minor issues (maybe you woun't have any)
+We have also created powershell script which allows you to easily install NotPixelBot on Windows.
 
 Before running the script, you must do some preparation
 
