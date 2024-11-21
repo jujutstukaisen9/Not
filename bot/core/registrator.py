@@ -25,7 +25,7 @@ async def register_sessions(session_name: str | None = None) -> None:
             return
 
         raw_proxy = input(
-            "Enter proxy in format type://ip:port@username:password (Enter to skip): "
+            "Enter proxy in format type://username:password@ip:port (Enter to skip): "
         )
 
         user_agent = generate_user_agent()
