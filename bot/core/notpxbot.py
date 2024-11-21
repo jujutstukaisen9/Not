@@ -142,7 +142,9 @@ class NotPXBot:
     async def _proxy_checker(self, session: aiohttp.ClientSession, proxy: str):
         try:
             response = await session.get(
-                "https://ipinfo.io/json", timeout=aiohttp.ClientTimeout(10)
+                "https://ipinfo.io/json",
+                timeout=aiohttp.ClientTimeout(10),
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -255,7 +257,9 @@ class NotPXBot:
     ) -> Dict[str, str]:
         try:
             response = await session.get(
-                "https://notpx.app/api/v1/users/me", headers=self._headers["notpx"]
+                "https://notpx.app/api/v1/users/me",
+                headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -278,6 +282,7 @@ class NotPXBot:
             response = await session.get(
                 "https://tganalytics.xyz/aee7c93a9ae7930fb19732325d2c560c53849aa7",
                 headers=self._headers["tganalytics"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
@@ -297,7 +302,10 @@ class NotPXBot:
             await asyncio.sleep(random_event_delay / 1000)
 
             response = await session.post(
-                "https://tganalytics.xyz/events", headers=headers, json=payload
+                "https://tganalytics.xyz/events",
+                headers=headers,
+                json=payload,
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
@@ -348,6 +356,7 @@ class NotPXBot:
                 "https://plausible.joincommunity.xyz/api/event",
                 headers=self._headers["plausible"],
                 data=payload,
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             logger.info(f"{self.session_name} | Plausible event sent")
@@ -395,7 +404,9 @@ class NotPXBot:
             await self._send_plausible_event(session, plausible_payload)
 
             response = await session.get(
-                "https://notpx.app/api/v1/mining/claim", headers=self._headers["notpx"]
+                "https://notpx.app/api/v1/mining/claim",
+                headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -431,6 +442,7 @@ class NotPXBot:
             response = await session.get(
                 "https://notpx.app/api/v1/image/template/list?limit=12&offset=0",
                 headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -440,6 +452,7 @@ class NotPXBot:
             response = await session.get(
                 f"https://notpx.app/api/v1/image/template/{random_template['templateId']}",
                 headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -453,6 +466,7 @@ class NotPXBot:
             response = await session.put(
                 f"https://notpx.app/api/v1/image/template/subscribe/{self.template_id}",
                 headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
@@ -478,6 +492,7 @@ class NotPXBot:
             response = await session.get(
                 "https://notpx.app/api/v1/image/template/my",
                 headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             if response.status == 404:
                 return False
@@ -507,7 +522,9 @@ class NotPXBot:
     ) -> None:
         try:
             response = await session.get(
-                "https://notpx.app/api/v1/mining/status", headers=self._headers["notpx"]
+                "https://notpx.app/api/v1/mining/status",
+                headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
@@ -591,7 +608,9 @@ class NotPXBot:
             )
             return False
 
-        response = await session.get(url, headers=self._headers["notpx"])
+        response = await session.get(
+            url, headers=self._headers["notpx"], ssl=settings.ENABLE_SSL
+        )
         response.raise_for_status()
         response_json = await response.json()
 
@@ -633,6 +652,7 @@ class NotPXBot:
             "https://notpx.app/api/v1/repaint/start",
             headers=self._headers["notpx"],
             json=payload,
+            ssl=settings.ENABLE_SSL,
         ) as response:
             response.raise_for_status()
 
@@ -662,7 +682,9 @@ class NotPXBot:
 
         try:
             response = await session.get(
-                self.template_url, headers=self._headers["image_notpx"]
+                self.template_url,
+                headers=self._headers["image_notpx"],
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
@@ -771,6 +793,7 @@ class NotPXBot:
                     response = await session.get(
                         f"https://notpx.app/api/v1/mining/task/check/x?name={twitter_account}",
                         headers=self._headers["notpx"],
+                        ssl=settings.ENABLE_SSL,
                     )
                     response.raise_for_status()
                     response_json = await response.json()
@@ -795,6 +818,7 @@ class NotPXBot:
                     response = await session.get(
                         f"https://notpx.app/api/v1/mining/task/check/channel?name={channel}",
                         headers=self._headers["notpx"],
+                        ssl=settings.ENABLE_SSL,
                     )
                     response.raise_for_status()
                     logger.info(f"{self.session_name} | Completed task: Join {channel}")

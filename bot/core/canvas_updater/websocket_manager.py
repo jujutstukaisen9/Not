@@ -240,6 +240,7 @@ class WebSocketManager:
                         self.__websocket_url,
                         headers=self._active_session.websocket_headers,
                         protocols=["centrifuge-protobuf"],
+                        ssl=settings.ENABLE_SSL,
                     ) as websocket:
                         self._websocket = websocket
                         logger.info(
@@ -479,6 +480,7 @@ class WebSocketManager:
                 async with session.get(
                     self.__token_endpoint,
                     headers=self._active_session.notpx_headers,
+                    ssl=settings.ENABLE_SSL,
                 ) as response:
                     response.raise_for_status()
                     response_json = await response.json()

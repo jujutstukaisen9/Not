@@ -2,9 +2,12 @@ import asyncio
 import re
 import traceback
 from typing import Dict
+
 import aiohttp
 from bs4 import BeautifulSoup
-from bot.utils.logger import logger, dev_logger
+
+from bot.config.config import settings
+from bot.utils.logger import dev_logger, logger
 
 
 class NotPXAPIChecker:
@@ -29,7 +32,9 @@ class NotPXAPIChecker:
             bool: True if the API URL is correct, False otherwise.
         """
         try:
-            response = await session.get(self.BASE_URL, headers=notpx_headers)
+            response = await session.get(
+                self.BASE_URL, headers=notpx_headers, ssl=settings.ENABLE_SSL
+            )
             response.raise_for_status()
             html_content = await response.text()
 
@@ -52,7 +57,9 @@ class NotPXAPIChecker:
 
             js_url = f"{self.BASE_URL}{result}"
 
-            response = await session.get(js_url, headers=notpx_headers)
+            response = await session.get(
+                js_url, headers=notpx_headers, ssl=settings.ENABLE_SSL
+            )
             response.raise_for_status()
             js_content = await response.text()
 

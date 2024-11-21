@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     PLAY_INTRO: bool = True
     INITIAL_START_DELAY_SECONDS: list[int] = [10, 240]  # in seconds
     ITERATION_SLEEP_MINUTES: list[int] = [60, 120]  # in minutes
+    ENABLE_SSL: bool = True
 
     USE_REF: bool = True
     REF_ID: str = "f773211512"  # It would be great if you didn't change it, but I'm not stopping you
