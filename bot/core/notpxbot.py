@@ -1,7 +1,6 @@
 import asyncio
 import io
 import random
-import re
 import sys
 import traceback
 from datetime import datetime
@@ -587,12 +586,21 @@ class NotPXBot:
             self._charges = response_json.get("charges")
 
             self._completed_tasks = response_json.get("tasks")
-
             for task_list_key, task_list_value in self._tasks_list.items():
                 for task_key, task_value in task_list_value.items():
                     if task_key not in self._completed_tasks:
+                        if task_value.startswith("leagueBonus"):
+                            league_name = task_value.split("leagueBonus")[1].lower()
+
+                            task_league_weight = self._league_weights[league_name]
+                            current_league_weight = self._league_weights[self.league]
+
+                            if task_league_weight > current_league_weight:
+                                continue
+
                         if task_list_key not in self._tasks_to_complete:
                             self._tasks_to_complete[task_list_key] = {}
+
                         self._tasks_to_complete[task_list_key][task_key] = task_value
 
             self._completed_quests = response_json.get("quests")
@@ -883,19 +891,7 @@ class NotPXBot:
                         )
 
                     elif task_list_key == "league_tasks_list":
-                        current_league_weight = self._league_weights[self.league]
-
-                        task_league_result = re.search(r"leagueBonus(.*)", task_value)
-                        if not task_league_result:
-                            raise Exception(
-                                f"{self.session_name} | Failed to parse league_task: {task_value}"
-                            )
-
-                        league_name = task_league_result.group(1).lower()
-
-                        task_league_weight = self._league_weights[league_name]
-                        if task_league_weight > current_league_weight:
-                            continue
+                        league_name = task_value.split("leagueBonus")[1]
 
                         response = await session.get(
                             f"https://notpx.app/api/v1/mining/task/check/{task_value}",
