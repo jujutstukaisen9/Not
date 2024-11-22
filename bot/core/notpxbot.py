@@ -82,12 +82,16 @@ class NotPXBot:
                 "unitsWallet": "unitsWallet",
             },
         }
-        self._tasks_to_complete = {}
-        self._league_weights = {
+        self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
+        self._league_weights: Dict[str, int] = {
             "silver": 0,
             "gold": 1,
             "platinum": 2,
         }
+        self._quests_list: List[str] = [
+            "secretWord:happy halloween",
+        ]
+        self._quests_to_complete: List[str] = []
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
@@ -262,6 +266,9 @@ class NotPXBot:
             await self._task_completion(
                 session, telegram_client, self._tasks_to_complete
             )
+
+        if settings.COMPLETE_QUESTS and self._quests_to_complete:
+            await self._quest_completion(session)
 
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
@@ -579,6 +586,14 @@ class NotPXBot:
                         if task_list_key not in self._tasks_to_complete:
                             self._tasks_to_complete[task_list_key] = {}
                         self._tasks_to_complete[task_list_key][task_key] = task_value
+
+            self._completed_quests = response_json.get("quests")
+            for quest in self._quests_list:
+                if not self._completed_quests:
+                    self.quests_to_complete = []
+                    self._quests_to_complete.append(quest)
+                elif quest not in self._completed_quests:
+                    self._quests_to_complete.append(quest)
 
             logger.info(
                 f"{self.session_name} | Successfully logged in | Balance: {round(self.balance, 2)} | League: {self.league.capitalize()}"
@@ -966,6 +981,57 @@ class NotPXBot:
             else:
                 raise Exception(
                     f"{self.session_name} | Max retry attempts reached while setting tournament template"
+                )
+
+    async def _quest_completion(
+        self, session: aiohttp.ClientSession, attempts: int = 1
+    ):
+        try:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/secrets"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
+            for quest in self._quests_to_complete:
+                secret_word = quest.split(":")[1]
+
+                payload = {"secret_word": secret_word}
+                response = await session.post(
+                    "https://notpx.app/api/v1/mining/quest/check/secretWord",
+                    json=payload,
+                    headers=self._headers["notpx"],
+                    ssl=settings.ENABLE_SSL,
+                )
+                response.raise_for_status()
+
+                response_json = await response.json()
+                if response_json.get("secretWord").get("success"):
+                    logger.info(
+                        f"{self.session_name} | Completed secret word quest | Reward: {response_json.get('secretWord').get('reward')}"
+                    )
+                else:
+                    raise Exception(
+                        f"{self.session_name} | Failed to complete secret word quest | Secret word: {secret_word}"
+                    )
+
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+        except Exception:
+            if attempts <= 3:
+                logger.warning(
+                    f"{self.session_name} | Failed to complete secret word quest, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                )
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
+                await asyncio.sleep(self.RETRY_DELAY)
+                await self._quest_completion(session=session, attempts=attempts + 1)
+            else:
+                raise Exception(
+                    f"{self.session_name} | Max retry attempts reached while completing secret word quest"
                 )
 
 

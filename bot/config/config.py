@@ -26,6 +26,6 @@ class Settings(BaseSettings):
     PAINT_PIXELS: bool = True
     COMPLETE_TASKS: bool = True
     PARTICIPATE_IN_TOURNAMENT: bool = True
-
+    COMPLETE_QUESTS: bool = True
 
 settings = Settings()  # type: ignore
