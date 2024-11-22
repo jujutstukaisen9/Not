@@ -1,6 +1,7 @@
 import asyncio
 import io
 import random
+import re
 import sys
 import traceback
 from datetime import datetime
@@ -63,17 +64,30 @@ class NotPXBot:
             "energyLimit": {2: 5, 3: 100, 4: 200, 5: 300, 6: 400, 7: 10},
         }
         self._canvas_renderer: DynamicCanvasRenderer = DynamicCanvasRenderer()
-        self._tasks_list: Dict[str, str] = {
-            "x:notpixel": "notpixel",
-            "x:notcoin": "notcoin",
-            "channel:notpixel_channel": "notpixel_channel",
-            "channel:notcoin": "notcoin",
-            # "leagueBonusGold": "leagueBonusGold",
-            # "leagueBonusSilver": "leagueBonusSilver",
-            # "leagueBonusPlatinum": "leagueBonusPlatinum",
-            # "pixelInNickname": "pixelInNickname",
+        self._tasks_list: Dict[str, Dict[str, str]] = {
+            "x_tasks_list": {
+                "x:notpixel": "notpixel",
+                "x:notcoin": "notcoin",
+            },
+            "channel_tasks_list": {
+                "channel:notpixel_channel": "notpixel_channel",
+                "channel:notcoin": "notcoin",
+            },
+            "league_tasks_list": {
+                "leagueBonusSilver": "leagueBonusSilver",
+                "leagueBonusGold": "leagueBonusGold",
+                "leagueBonusPlatinum": "leagueBonusPlatinum",
+            },
+            "click_tasks_list": {
+                "unitsWallet": "unitsWallet",
+            },
         }
         self._tasks_to_complete = {}
+        self._league_weights = {
+            "silver": 0,
+            "gold": 1,
+            "platinum": 2,
+        }
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
@@ -558,9 +572,13 @@ class NotPXBot:
             self._charges = response_json.get("charges")
 
             self._completed_tasks = response_json.get("tasks")
-            for task in self._tasks_list:
-                if task not in self._completed_tasks:
-                    self._tasks_to_complete[task] = self._tasks_list[task]
+
+            for task_list_key, task_list_value in self._tasks_list.items():
+                for task_key, task_value in task_list_value.items():
+                    if task_key not in self._completed_tasks:
+                        if task_list_key not in self._tasks_to_complete:
+                            self._tasks_to_complete[task_list_key] = {}
+                        self._tasks_to_complete[task_list_key][task_key] = task_value
 
             logger.info(
                 f"{self.session_name} | Successfully logged in | Balance: {round(self.balance, 2)} | League: {self.league.capitalize()}"
@@ -737,7 +755,7 @@ class NotPXBot:
                         logger.warning(
                             f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
                         )
-                        await self._set_template(session)  # Reset template
+                        await self._set_template(session)
                         return await self._paint_pixels(session, attempts=attempts)
 
                     canvas_array = self._canvas_renderer.get_canvas
@@ -801,46 +819,87 @@ class NotPXBot:
             )
             await self._send_plausible_event(session, plausible_payload)
 
-            twitter_keys = [key for key in tasks_to_complete if key.startswith("x:")]
-            channel_keys = [
-                key for key in tasks_to_complete if key.startswith("channel:")
-            ]
+            for task_list_key, task_list_value in self._tasks_to_complete.items():
+                for task_key, task_value in task_list_value.items():
+                    if task_list_key == "x_tasks_list":
+                        response = await session.get(
+                            f"https://notpx.app/api/v1/mining/task/check/x?name={task_value}",
+                            headers=self._headers["notpx"],
+                            ssl=settings.ENABLE_SSL,
+                        )
+                        response.raise_for_status()
+                        response_json = await response.json()
+                        if response_json.get("x:" + task_value) or response_json.get(
+                            task_value
+                        ):
+                            logger.info(
+                                f"{self.session_name} | Completed task: {task_value} on X.com"
+                            )
+                        else:
+                            raise Exception(
+                                f"{self.session_name} | Failed to complete task: {task_value} on X.com"
+                            )
 
-            if twitter_keys:
-                for key in twitter_keys:
-                    twitter_account = tasks_to_complete[key]
-                    response = await session.get(
-                        f"https://notpx.app/api/v1/mining/task/check/x?name={twitter_account}",
-                        headers=self._headers["notpx"],
-                        ssl=settings.ENABLE_SSL,
-                    )
-                    response.raise_for_status()
-                    response_json = await response.json()
-                    if response_json.get("x:" + twitter_account):
+                    elif task_list_key == "channel_tasks_list":
+                        async with telegram_client:
+                            await telegram_client.join_chat(task_value)
+
+                        await asyncio.sleep(random.uniform(1.95, 2.35))
+
+                        response = await session.get(
+                            f"https://notpx.app/api/v1/mining/task/check/channel?name={task_value}",
+                            headers=self._headers["notpx"],
+                            ssl=settings.ENABLE_SSL,
+                        )
+                        response.raise_for_status()
                         logger.info(
-                            f"{self.session_name} | Completed task: {twitter_account} on X.com"
+                            f"{self.session_name} | Completed task: Join {task_value} channel"
                         )
-                    else:
-                        logger.warning(
-                            f"{self.session_name} | Failed to complete task: {twitter_account} on X.com"
+
+                    elif task_list_key == "league_tasks_list":
+                        current_league_weight = self._league_weights[self.league]
+
+                        task_league_result = re.search(r"leagueBonus(.*)", task_value)
+                        if not task_league_result:
+                            raise Exception(
+                                f"{self.session_name} | Failed to parse league_task: {task_value}"
+                            )
+
+                        league_name = task_league_result.group(1).lower()
+
+                        task_league_weight = self._league_weights[league_name]
+                        if task_league_weight > current_league_weight:
+                            continue
+
+                        response = await session.get(
+                            f"https://notpx.app/api/v1/mining/task/check/{task_value}",
+                            headers=self._headers["notpx"],
+                            ssl=settings.ENABLE_SSL,
                         )
-                    await asyncio.sleep(random.uniform(4.95, 6.35))
+                        response.raise_for_status()
+                        logger.info(
+                            f"{self.session_name} | Completed task: Bonus for {league_name} league"
+                        )
 
-            if channel_keys:
-                for key in channel_keys:
-                    channel = tasks_to_complete[key]
-                    async with telegram_client:
-                        await telegram_client.join_chat(channel)
+                    elif task_list_key == "click_tasks_list":
+                        response = await session.get(
+                            f"https://notpx.app/api/v1/mining/task/check/{task_value}",
+                            headers=self._headers["notpx"],
+                            ssl=settings.ENABLE_SSL,
+                        )
+                        response.raise_for_status()
+                        response_json = await response.json()
+                        if response_json.get("x:" + task_value) or response_json.get(
+                            task_value
+                        ):
+                            logger.info(
+                                f"{self.session_name} | Completed task: {task_value}"
+                            )
+                        else:
+                            raise Exception(
+                                f"{self.session_name} | Failed to complete task: {task_value}"
+                            )
 
-                    await asyncio.sleep(random.uniform(1.95, 2.35))
-
-                    response = await session.get(
-                        f"https://notpx.app/api/v1/mining/task/check/channel?name={channel}",
-                        headers=self._headers["notpx"],
-                        ssl=settings.ENABLE_SSL,
-                    )
-                    response.raise_for_status()
-                    logger.info(f"{self.session_name} | Completed task: Join {channel}")
                     await asyncio.sleep(random.uniform(4.95, 6.35))
 
             plausible_payload = await self._create_plausible_payload(
@@ -853,6 +912,10 @@ class NotPXBot:
                 logger.warning(
                     f"{self.session_name} | Failed to complete tasks, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._task_completion(
                     session=session,
@@ -889,6 +952,7 @@ class NotPXBot:
                 "https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
+
         except Exception:
             if attempts <= 3:
                 logger.warning(
