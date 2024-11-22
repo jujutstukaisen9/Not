@@ -193,11 +193,11 @@ We update NotPixelBot according to changes in NotPixel.
   </tbody>
 </table>
 
-## How to start 📚
+## How to install 📚
 
-Before you begin, make sure you have meet the [requirements](#requirements)
+Before you begin, make sure you have meet the [requirements](#requirements). It's really IMPORTANT, without these requiremenets, you can NOT install our script.
 
-## Obtaining API Keys
+### Obtaining API Keys
 
 1. Go to my.telegram.org and log in using your phone number.
 2. Select "API development tools" and fill out the form to register a new application.
@@ -205,9 +205,11 @@ Before you begin, make sure you have meet the [requirements](#requirements)
 
 Sometimes when creating a new application, it may display an error. It is still not clear what causes this, but you can try the solutions described on [stackoverflow](https://stackoverflow.com/questions/68965496/my-telegram-org-sends-an-error-when-i-want-to-create-an-api-id-hash-in-api-devel).
 
-## Linux manual installation
+### Linux manual installation
 
 ```shell
+git clone https://github.com/Dellenoam/NotPixelBot.git
+cd NotPixelBot
 python3 -m venv .venv
 source .venv/bin/activate
 pip install poetry
@@ -216,9 +218,11 @@ cp .env-example .env
 nano .env  # Specify your API_ID and API_HASH, the rest is taken by default
 ```
 
-## Windows manual installation
+### Windows manual installation
 
 ```shell
+git clone https://github.com/Dellenoam/NotPixelBot.git
+cd NotPixelBot
 python -m venv .venv
 .venv\Scripts\activate
 pip install poetry
@@ -227,7 +231,7 @@ copy .env-example .env
 # Then open .env in any text editor and specify your API_ID and API_HASH, the rest is taken by default
 ```
 
-## Windows installation using powershell script
+### Windows installation using powershell script
 
 NOTE: The install.ps1 script installs Chocolatey, a package manager for Windows, and uses it to install Python, Git, and NodeJS, if they are not already installed
 
@@ -251,9 +255,11 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\install.ps1"
 
 After that script will be downloaded to the temp folder and executed. When it asks you to enter path where to do git clone, just enter the path where you want to do git clone. For example `C:\Users\username\Scripts\NotPixelBot` without any quotes.
 
-Well, now you can proceed to the [Run the script](#run-the-script) section.
+Navigate to the folder with the installed bot. Copy the .env-example file and rename it to .env, then open it in any editor and write down the API_ID and API_HASH that you received earlier.
 
-## Windows uninstallation using powershell script
+Now you can proceed to the [Run the script](#run-the-script) section.
+
+### Windows uninstallation using powershell script
 
 NOTE: The install.ps1 script installs Chocolatey, which is then used to install Python, Git, and Node.js. This uninstall.ps1 script will also uninstall these programs using Chocolatey, including Chocolatey itself. However, it will not remove the NotPixelBot folder. Therefore, please be cautious.
 
@@ -265,24 +271,27 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/
 powershell -ExecutionPolicy Bypass -File "$env:TEMP\uninstall.ps1"
 ```
 
-## Run the script
+### Run the script
 
 ![NotPixel Intro](https://github.com/Dellenoam/NotPixelBot/blob/master/assets/NotPixel_Intro.gif)
 
 
-### Using start.bat
+#### Using start.bat
 
 You can run the script using start.bat script, just execute it.
 
-### Manually
+#### Manually
 
-Before running the script, you always need to activate the virtual environment.
+Before running the script, you ALWAYS need to activate the virtual environment and check for updates.
 
 ```shell
 # Linux
 source .venv\bin\activate
 # Windows
 .venv\Scripts\activate
+
+# Linux/Windows
+git pull
 ```
 
 To run the script, use `python3 main.py` on Linux or `python main.py` on Windows.
