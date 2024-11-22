@@ -874,6 +874,8 @@ class NotPXBot:
                                 f"{self.session_name} | Failed to complete task: {task_value} on X.com"
                             )
 
+                        del self._tasks_to_complete[task_list_key][task_key]
+
                     elif task_list_key == "channel_tasks_list":
                         async with telegram_client:
                             await telegram_client.join_chat(task_value)
@@ -890,6 +892,8 @@ class NotPXBot:
                             f"{self.session_name} | Completed task: Join {task_value} channel"
                         )
 
+                        del self._tasks_to_complete[task_list_key][task_key]
+
                     elif task_list_key == "league_tasks_list":
                         league_name = task_value.split("leagueBonus")[1]
 
@@ -902,6 +906,8 @@ class NotPXBot:
                         logger.info(
                             f"{self.session_name} | Completed task: Bonus for {league_name} league"
                         )
+
+                        del self._tasks_to_complete[task_list_key][task_key]
 
                     elif task_list_key == "click_tasks_list":
                         response = await session.get(
@@ -921,6 +927,8 @@ class NotPXBot:
                             raise Exception(
                                 f"{self.session_name} | Failed to complete task: {task_value}"
                             )
+
+                        del self._tasks_to_complete[task_list_key][task_key]
 
                     await asyncio.sleep(random.uniform(4.95, 6.35))
 
@@ -1022,6 +1030,8 @@ class NotPXBot:
                     raise Exception(
                         f"{self.session_name} | Failed to complete secret word quest | Secret word: {secret_word}"
                     )
+
+                self._quests_to_complete.remove(quest)
 
             plausible_payload = await self._create_plausible_payload(
                 "https://app.notpx.app/"
