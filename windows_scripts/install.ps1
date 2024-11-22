@@ -92,6 +92,7 @@ try {
     poetry install --only main
 
     Write-Host "Congratulations, you can now run NotPixelBot via start.bat or manually. Check the 'Run the script' section in README.md for details." -ForegroundColor Green
+    Write-Host "Don't forget to copy .env-example, rename it to .env and specify there API_ID and API_HASH using any text editor"
     Read-Host -Prompt "Press Enter to exit"
 } catch {
     Write-Host "Couldn't install NotPixelBot dependencies. Error: $_" -ForegroundColor Red
