@@ -64,6 +64,14 @@
       <td>✅</td>
     </tr>
     <tr>
+      <td>Автоматический ввод известных нам секретных слов</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Автоматический ввод ежедневных секретных слов</td>
+      <td>❌</td>
+    </tr>
+    <tr>
       <td>Автоматическое использование бомб</td>
       <td><img src="https://img.shields.io/badge/В_разработке-orange?style=flat-square" alt="X badge"></td>
     </tr>
@@ -189,6 +197,10 @@
     <tr>
       <td>PARTICIPATE_IN_TOURNAMENT</td>
       <td>True/False участие в турнире</td>
+    </tr>
+    <tr>
+      <td>COMPLETE_QUESTS</td>
+      <td>True/False автоматический ввод известных нам секретных слов</td>
     </tr>
   </tbody>
 </table>

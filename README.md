@@ -64,6 +64,14 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td>✅</td>
     </tr>
     <tr>
+      <td>Auto-input of the secret words we know</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Aut-input of daily secret words</td>
+      <td>❌</td>
+    </tr>
+    <tr>
       <td>Auto-use bombs</td>
       <td><img src="https://img.shields.io/badge/Work_in_Progress-orange?style=flat-square" alt="X badge"></td>
     </tr>
@@ -189,6 +197,10 @@ We update NotPixelBot according to changes in NotPixel.
     <tr>
       <td>PARTICIPATE_IN_TOURNAMENT</td>
       <td>True/False participate in tournament</td>
+    </tr>
+    <tr>
+      <td>COMPLETE_QUESTS</td>
+      <td>True/False auto-input of the secret words we know</td>
     </tr>
   </tbody>
 </table>
