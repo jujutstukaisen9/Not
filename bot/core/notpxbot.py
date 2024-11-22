@@ -459,6 +459,10 @@ class NotPXBot:
                 logger.warning(
                     f"{self.session_name} | Failed to claim px, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 return await self._claim_px(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while claiming px")
@@ -514,6 +518,10 @@ class NotPXBot:
                 logger.warning(
                     f"{self.session_name} | Failed to set template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 return await self._set_template(session=session, attempts=attempts + 1)
             raise Exception(f"{self.session_name} | Error while setting template")
@@ -629,6 +637,10 @@ class NotPXBot:
                     f"{self.session_name} | Failed to upgrade boosts, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
                 await self._upgrade_boosts(session=session, attempts=attempts + 1)
             else:
                 raise Exception(f"{self.session_name} | Error while upgrading boosts")
@@ -792,7 +804,6 @@ class NotPXBot:
                             consecutive_zero_rewards = 0
 
                         await asyncio.sleep(random.uniform(0.95, 2.3))
-
         except Exception:
             if attempts <= 3:
                 logger.warning(
@@ -952,13 +963,15 @@ class NotPXBot:
                 "https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
-
         except Exception:
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to set tournament template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                dev_logger.warning(f"{self.session_name} | {traceback.format_exc()}")
+                plausible_payload = await self._create_plausible_payload(
+                    "https://app.notpx.app/"
+                )
+                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._set_tournament_template(
                     session=session, attempts=attempts + 1
@@ -988,7 +1001,6 @@ async def run_notpxbot(
         )
         logger.info(f"{telegram_client.name} | Starting in {start_delay} seconds")
         await asyncio.sleep(start_delay)
-
         await NotPXBot(
             telegram_client=telegram_client, websocket_manager=websocket_manager
         ).run(user_agent=user_agent, proxy=proxy)
