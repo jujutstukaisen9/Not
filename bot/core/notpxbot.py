@@ -83,9 +83,10 @@ class NotPXBot:
         }
         self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
         self._league_weights: Dict[str, int] = {
-            "silver": 0,
-            "gold": 1,
-            "platinum": 2,
+            "bronze": 0,
+            "silver": 1,
+            "gold": 2,
+            "platinum": 3,
         }
         self._quests_list: List[str] = [
             "secretWord:happy halloween",
