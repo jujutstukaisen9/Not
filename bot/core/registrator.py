@@ -1,4 +1,3 @@
-import re
 import traceback
 from urllib.parse import urlparse
 
@@ -65,14 +64,6 @@ async def get_telegram_client(
         if not settings.API_ID or not settings.API_HASH:
             raise ValueError("API_ID and API_HASH must be set in .env file")
 
-        device_model = re.search(r"Android ([\d.]+); ([\w\s-]+)", user_agent)
-
-        if not device_model:
-            raise ValueError("Invalid user agent")
-
-        system_version = device_model.group(1)
-        device_name = device_model.group(2)
-
         parsed_proxy = urlparse(raw_proxy) if raw_proxy else None
 
         proxy_dict = (
@@ -93,9 +84,6 @@ async def get_telegram_client(
             api_hash=settings.API_HASH,
             proxy=proxy_dict,  # type: ignore
             workdir="sessions",
-            device_model=device_name,
-            system_version=system_version,
-            app_version="Telegram Android 11.4.2",
         )
 
         return telegram_client
