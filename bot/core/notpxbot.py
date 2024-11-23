@@ -264,7 +264,7 @@ class NotPXBot:
 
         if settings.COMPLETE_TASKS and self._tasks_to_complete:
             await self._task_completion(
-                session, telegram_client, self._tasks_to_complete
+                session, telegram_client
             )
 
         if settings.COMPLETE_QUESTS and self._quests_to_complete:
@@ -461,18 +461,20 @@ class NotPXBot:
                 "https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
-        except Exception:
+        except Exception as error:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to claim px, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 return await self._claim_px(session=session, attempts=attempts + 1)
-            raise Exception(f"{self.session_name} | Error while claiming px")
+
+            raise Exception(f"{self.session_name} | Error while claiming px: {error}")
 
     async def _set_template(
         self, session: aiohttp.ClientSession, attempts: int = 1
@@ -521,16 +523,18 @@ class NotPXBot:
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to set template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 return await self._set_template(session=session, attempts=attempts + 1)
+
             raise Exception(f"{self.session_name} | Error while setting template")
 
     async def _check_my(
@@ -656,18 +660,19 @@ class NotPXBot:
                     return
 
         except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to upgrade boosts, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await self._upgrade_boosts(session=session, attempts=attempts + 1)
-            else:
-                raise Exception(f"{self.session_name} | Error while upgrading boosts")
+
+            raise Exception(f"{self.session_name} | Error while upgrading boosts")
 
     async def _upgrade_boost(self, session, boost_type) -> bool:
         url = f"https://notpx.app/api/v1/mining/boost/check/{boost_type}"
@@ -697,9 +702,11 @@ class NotPXBot:
         self.balance -= self.boost_prices[boost_type][
             getattr(self, f"boost_{boost_type}")
         ]
+
         logger.info(
             f"{self.session_name} | Successfully leveled up {boost_type}! | LVL.{old_boost} -> LVL.{old_boost + 1}"
         )
+
         return True
 
     async def _paint_pixel(
@@ -709,8 +716,6 @@ class NotPXBot:
         canvas_y: int,
         template_pixel: np.ndarray,
     ) -> None:
-        """Paint a single pixel and handle the response."""
-
         template_pixel_hex = self._canvas_renderer.rgba_to_hex(
             tuple(template_pixel.flatten().tolist())
         )
@@ -848,7 +853,6 @@ class NotPXBot:
         self,
         session: aiohttp.ClientSession,
         telegram_client: Client,
-        tasks_to_complete: Dict,
         attempts: int = 1,
     ) -> None:
         try:
@@ -936,25 +940,25 @@ class NotPXBot:
             await self._send_plausible_event(session, plausible_payload)
 
         except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to complete tasks, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._task_completion(
                     session=session,
                     telegram_client=telegram_client,
-                    tasks_to_complete=tasks_to_complete,
                     attempts=attempts + 1,
                 )
-            else:
-                raise Exception(
-                    f"{self.session_name} | Max retry attempts reached while completing tasks"
-                )
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while completing tasks"
+            )
 
     async def _set_tournament_template(
         self, session: aiohttp.ClientSession, attempts: int = 1
@@ -981,22 +985,23 @@ class NotPXBot:
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to set tournament template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._set_tournament_template(
                     session=session, attempts=attempts + 1
                 )
-            else:
-                raise Exception(
-                    f"{self.session_name} | Max retry attempts reached while setting tournament template"
-                )
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while setting tournament template"
+            )
 
     async def _quest_completion(
         self, session: aiohttp.ClientSession, attempts: int = 1
@@ -1043,20 +1048,21 @@ class NotPXBot:
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                "https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to complete secret word quest, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                plausible_payload = await self._create_plausible_payload(
-                    "https://app.notpx.app/"
-                )
-                await self._send_plausible_event(session, plausible_payload)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._quest_completion(session=session, attempts=attempts + 1)
-            else:
-                raise Exception(
-                    f"{self.session_name} | Max retry attempts reached while completing secret word quest"
-                )
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while completing secret word quest"
+            )
 
 
 def handle_error(session_name, error: Exception) -> None:
