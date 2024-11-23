@@ -6,7 +6,7 @@ import traceback
 from datetime import datetime
 from random import choice, randint
 from time import time
-from typing import Dict, List, NoReturn
+from typing import Dict, List, NoReturn, Tuple
 from uuid import uuid4
 
 import aiohttp
@@ -93,6 +93,10 @@ class NotPXBot:
         ]
         self._quests_to_complete: List[str] = []
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
+        self._pixel_locks: Dict[Tuple[int, int], asyncio.Lock] = {}
+        self._lock: asyncio.Lock = asyncio.Lock()
+        self._last_time_used_locks: Dict[Tuple[int, int], float] = {}
+        self._cleanup_locks_treshold: int = 300  # 5 minutes
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
         base_headers = {
@@ -709,6 +713,26 @@ class NotPXBot:
 
         return True
 
+    async def _get_pixel_lock(self, x: int, y: int) -> asyncio.Lock:
+        pixel_key = (x, y)
+        async with self._lock:
+            if pixel_key not in self._pixel_locks:
+                self._pixel_locks[pixel_key] = asyncio.Lock()
+            self._last_time_used_locks[pixel_key] = time()
+            return self._pixel_locks[pixel_key]
+
+    async def _cleanup_locks(self):
+        current_time = time()
+        async with self._lock:
+            to_remove = []
+            for pixel_key, last_time_used in self._last_time_used_locks.items():
+                if current_time - last_time_used > self._cleanup_locks_treshold:
+                    to_remove.append(pixel_key)
+
+            for pixel_key in to_remove:
+                del self._last_time_used_locks[pixel_key]
+                del self._pixel_locks[pixel_key]
+
     async def _paint_pixel(
         self,
         session: aiohttp.ClientSession,
@@ -759,6 +783,8 @@ class NotPXBot:
         # consecutive_zero_rewards = 0
 
         try:
+            await self._cleanup_locks()
+
             response = await session.get(
                 self.template_url,
                 headers=self._headers["image_notpx"],
@@ -784,21 +810,33 @@ class NotPXBot:
                 (self.template_size, self.template_size, 4)
             )
 
+            pixels_to_paint = []
             for ty in range(self.template_size):
+                for tx in range(self.template_size):
+                    template_pixel = template_2d[ty, tx]
+                    if template_pixel[3] == 0:
+                        continue
+
+                    canvas_x = self.template_x + tx
+                    canvas_y = self.template_y + ty
+                    pixels_to_paint.append((tx, ty, canvas_x, canvas_y))
+
+            random.shuffle(pixels_to_paint)
+
+            for tx, ty, canvas_x, canvas_y in pixels_to_paint:
                 if self._charges <= 0:
                     break
 
-                for tx in range(self.template_size):
-                    if self._charges <= 0:
-                        break
+                # if consecutive_zero_rewards >= MAX_CONSECUTIVE_ZERO:
+                #     logger.warning(
+                #         f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
+                #     )
+                #     await self._set_template(session)
+                #     return await self._paint_pixels(session, attempts=attempts)
 
-                    # if consecutive_zero_rewards >= MAX_CONSECUTIVE_ZERO:
-                    #     logger.warning(
-                    #         f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
-                    #     )
-                    #     await self._set_template(session)
-                    #     return await self._paint_pixels(session, attempts=attempts)
+                pixel_lock = await self._get_pixel_lock(canvas_x, canvas_y)
 
+                async with pixel_lock:
                     canvas_array = self._canvas_renderer.get_canvas
                     canvas_2d = canvas_array.reshape(
                         (
@@ -808,14 +846,8 @@ class NotPXBot:
                         )
                     )
 
-                    canvas_x = self.template_x + tx
-                    canvas_y = self.template_y + ty
-
                     template_pixel = template_2d[ty, tx]
                     canvas_pixel = canvas_2d[canvas_y, canvas_x]
-
-                    if template_pixel[3] == 0:
-                        continue
 
                     if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
                         # initial_balance = self.balance
@@ -832,22 +864,19 @@ class NotPXBot:
                         # else:
                         #     consecutive_zero_rewards = 0
 
-                        await asyncio.sleep(random.uniform(0.95, 2.3))
+                        await asyncio.sleep(random.uniform(0.95, 1.5))
+
         except Exception:
             if attempts <= 3:
                 logger.warning(
                     f"{self.session_name} | Failed to paint pixels, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                # logger.warning(
-                #     f"{self.session_name} | Failed to paint pixels, changing template and retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
-                # )
-                # await self._set_template(session)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._paint_pixels(session=session, attempts=attempts + 1)
-            else:
-                raise Exception(
-                    f"{self.session_name} | Max retry attempts reached while painting pixels"
-                )
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while painting pixels"
+            )
 
     async def _task_completion(
         self,
