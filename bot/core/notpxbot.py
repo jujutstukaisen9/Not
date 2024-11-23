@@ -263,12 +263,12 @@ class NotPXBot:
             await self._claim_px(session)
 
         if settings.COMPLETE_TASKS and self._tasks_to_complete:
-            await self._task_completion(
-                session, telegram_client
-            )
+            await self._task_completion(session, telegram_client)
 
         if settings.COMPLETE_QUESTS and self._quests_to_complete:
             await self._quest_completion(session)
+
+        logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
 
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
@@ -743,13 +743,13 @@ class NotPXBot:
             if round(new_balance, 2) > round(self.balance, 2):
                 balance_increase = new_balance - self.balance
                 logger.info(
-                    f"{self.session_name} | Successfully painted pixel | +{round(balance_increase, 2)} PX"
+                    f"{self.session_name} | Successfully painted pixel | +{round(balance_increase, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
                 )
                 self.balance = new_balance
                 return
 
             logger.warning(
-                f"{self.session_name} | Painted pixel, but balance didn't increase | Current balance: {round(self.balance, 2)} PX"
+                f"{self.session_name} | Painted pixel, but balance didn't increase | Current balance: {round(self.balance, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
             )
 
     async def _paint_pixels(
