@@ -7,7 +7,7 @@ from pyrogram.client import Client
 from bot.config.config import settings
 from bot.utils.json_manager import JsonManager
 from bot.utils.logger import dev_logger, logger
-from bot.utils.ua_generator import generate_user_agent
+from bot.utils.ua_generator import TelegramUserAgentGenerator
 
 
 async def register_sessions(session_name: str | None = None) -> None:
@@ -27,8 +27,9 @@ async def register_sessions(session_name: str | None = None) -> None:
         raw_proxy = input(
             "Enter proxy in format type://username:password@ip:port (Enter to skip): "
         )
-
-        user_agent = generate_user_agent()
+        
+        user_agent_generator = TelegramUserAgentGenerator()
+        user_agent = user_agent_generator.generate()
 
         session = await get_telegram_client(
             session_name=session_name, user_agent=user_agent, raw_proxy=raw_proxy
