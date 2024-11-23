@@ -256,12 +256,7 @@ class NotPXBot:
         while not self.websocket_manager.is_websocket_connected:
             await asyncio.sleep(2)
 
-        if settings.PAINT_PIXELS:
-            if not await self._check_my(session):
-                logger.warning(
-                    f"{self.session_name} | Can't paint pixels without template"
-                )
-
+        if settings.PAINT_PIXELS and await self._check_my(session):
             await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
@@ -1022,6 +1017,13 @@ class NotPXBot:
                     headers=self._headers["notpx"],
                     ssl=settings.ENABLE_SSL,
                 )
+
+                if response.status == 403:
+                    logger.info(
+                        f"{self.session_name} | Already completed secret word quest | Secret word: {secret_word}"
+                    )
+                    continue
+
                 response.raise_for_status()
 
                 response_json = await response.json()
