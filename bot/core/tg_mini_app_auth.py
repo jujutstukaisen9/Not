@@ -3,12 +3,7 @@ import json
 from typing import Dict
 from urllib.parse import (
     parse_qs,
-    quote,
     unquote,
-    urlencode,
-    urlparse,
-    urlsplit,
-    urlunsplit,
 )
 
 import pyrogram
