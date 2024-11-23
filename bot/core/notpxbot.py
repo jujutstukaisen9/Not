@@ -229,8 +229,8 @@ class NotPXBot:
 
         await self._get_status(session)
 
-        if not await self._check_my(session):
-            await self._set_template(session)
+        # if not await self._check_my(session):
+        #     await self._set_template(session)
 
         await self.websocket_manager.add_session(
             notpx_headers=self._headers["notpx"],
@@ -256,6 +256,11 @@ class NotPXBot:
             await asyncio.sleep(2)
 
         if settings.PAINT_PIXELS:
+            if not await self._check_my(session):
+                logger.warning(
+                    f"{self.session_name} | Can't paint pixels without template"
+                )
+
             await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
@@ -749,8 +754,8 @@ class NotPXBot:
     async def _paint_pixels(
         self, session: aiohttp.ClientSession, attempts: int = 1
     ) -> None:
-        MAX_CONSECUTIVE_ZERO = 5
-        consecutive_zero_rewards = 0
+        # MAX_CONSECUTIVE_ZERO = 5
+        # consecutive_zero_rewards = 0
 
         try:
             response = await session.get(
@@ -786,12 +791,12 @@ class NotPXBot:
                     if self._charges <= 0:
                         break
 
-                    if consecutive_zero_rewards >= MAX_CONSECUTIVE_ZERO:
-                        logger.warning(
-                            f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
-                        )
-                        await self._set_template(session)
-                        return await self._paint_pixels(session, attempts=attempts)
+                    # if consecutive_zero_rewards >= MAX_CONSECUTIVE_ZERO:
+                    #     logger.warning(
+                    #         f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
+                    #     )
+                    #     await self._set_template(session)
+                    #     return await self._paint_pixels(session, attempts=attempts)
 
                     canvas_array = self._canvas_renderer.get_canvas
                     canvas_2d = canvas_array.reshape(
@@ -812,7 +817,7 @@ class NotPXBot:
                         continue
 
                     if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
-                        initial_balance = self.balance
+                        # initial_balance = self.balance
 
                         await self._paint_pixel(
                             session=session,
@@ -821,18 +826,21 @@ class NotPXBot:
                             template_pixel=template_pixel,
                         )
 
-                        if round(self.balance, 2) <= round(initial_balance, 2):
-                            consecutive_zero_rewards += 1
-                        else:
-                            consecutive_zero_rewards = 0
+                        # if round(self.balance, 2) <= round(initial_balance, 2):
+                        #     consecutive_zero_rewards += 1
+                        # else:
+                        #     consecutive_zero_rewards = 0
 
                         await asyncio.sleep(random.uniform(0.95, 2.3))
         except Exception:
             if attempts <= 3:
                 logger.warning(
-                    f"{self.session_name} | Failed to paint pixels, changing template and retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                    f"{self.session_name} | Failed to paint pixels, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
-                await self._set_template(session)
+                # logger.warning(
+                #     f"{self.session_name} | Failed to paint pixels, changing template and retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                # )
+                # await self._set_template(session)
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._paint_pixels(session=session, attempts=attempts + 1)
             else:
@@ -923,7 +931,7 @@ class NotPXBot:
                             )
 
                     await asyncio.sleep(random.uniform(4.95, 6.35))
-            
+
             self._tasks_to_complete = {}
 
             plausible_payload = await self._create_plausible_payload(
@@ -1024,7 +1032,7 @@ class NotPXBot:
                     raise Exception(
                         f"{self.session_name} | Failed to complete secret word quest | Secret word: {secret_word}"
                     )
-            
+
             self._quests_to_complete = []
 
             plausible_payload = await self._create_plausible_payload(
