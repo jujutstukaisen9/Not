@@ -77,9 +77,7 @@ class NotPXBot:
                 "leagueBonusGold": "leagueBonusGold",
                 "leagueBonusPlatinum": "leagueBonusPlatinum",
             },
-            "click_tasks_list": {
-                "unitsWallet": "unitsWallet",
-            },
+            "click_tasks_list": {},
         }
         self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
         self._league_weights: Dict[str, int] = {
