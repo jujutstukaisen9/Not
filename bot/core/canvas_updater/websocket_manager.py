@@ -87,6 +87,7 @@ class WebSocketManager:
         self._refresh_task: Optional[asyncio.Task] = None
         self._token_refresh_event = asyncio.Event()
         self.__connection_attempts: int = 1
+        self._is_canvas_set: bool = False
 
     async def add_session(
         self,
@@ -310,7 +311,7 @@ class WebSocketManager:
                         "WebSocket connection not established"
                     )
 
-                message = await asyncio.wait_for(self._websocket.receive(), timeout=5)
+                message = await self._websocket.receive()
 
                 if message.type == WSMsgType.CLOSE:
                     raise WebSocketErrors.ServerClosedConnectionError(
@@ -328,9 +329,6 @@ class WebSocketManager:
 
                 await self._handle_websocket_message(decoded_message)
             except asyncio.CancelledError:
-                raise
-            except asyncio.TimeoutError:
-                logger.warning("WebSocketManager | WebSocket connection timed out")
                 raise
             except WebSocketErrors.ServerClosedConnectionError:
                 logger.warning("WebSocketManager | WebSocket server closed connection")
@@ -362,6 +360,7 @@ class WebSocketManager:
 
         if isinstance(message, bytes):
             await self._canvas_renderer.set_canvas(message)
+            self._is_canvas_set = True
             return
 
         await self._canvas_renderer.update_canvas(message)
@@ -528,8 +527,8 @@ class WebSocketManager:
             raise UpdateAuthHeaderError("Failed to update authorization header")
 
     @property
-    def is_websocket_connected(self) -> bool:
-        return self._websocket is not None and not self._websocket.closed
+    def is_canvas_set(self) -> bool:
+        return self._is_canvas_set
 
     async def stop(self) -> None:
         """
