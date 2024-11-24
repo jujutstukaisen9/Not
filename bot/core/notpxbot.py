@@ -6,7 +6,7 @@ import traceback
 from datetime import datetime
 from random import choice, randint
 from time import time
-from typing import Dict, List, NoReturn, Tuple
+from typing import Dict, List, NoReturn
 from uuid import uuid4
 
 import aiohttp
@@ -93,10 +93,6 @@ class NotPXBot:
         ]
         self._quests_to_complete: List[str] = []
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
-        self._pixel_locks: Dict[Tuple[int, int], asyncio.Lock] = {}
-        self._lock: asyncio.Lock = asyncio.Lock()
-        self._last_time_used_locks: Dict[Tuple[int, int], float] = {}
-        self._cleanup_locks_treshold: int = 300  # 5 minutes
 
     def _create_headers(self) -> Dict[str, Dict[str, str]]:
         base_headers = {
@@ -257,7 +253,7 @@ class NotPXBot:
             else:
                 logger.info(f"{self.session_name} | All boosts are maxed out")
 
-        while not self.websocket_manager.is_websocket_connected:
+        while not self.websocket_manager.is_canvas_set:
             await asyncio.sleep(2)
 
         if settings.PAINT_PIXELS and await self._check_my(session):
@@ -352,8 +348,6 @@ class NotPXBot:
                 ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
-
-            logger.info(f"{self.session_name} | Sent tganalytics event")
         except Exception:
             if attempts <= 3:
                 logger.warning(
@@ -403,7 +397,6 @@ class NotPXBot:
                 ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
-            logger.info(f"{self.session_name} | Plausible event sent")
         except Exception:
             if attempts <= 3:
                 logger.warning(
@@ -713,26 +706,6 @@ class NotPXBot:
 
         return True
 
-    async def _get_pixel_lock(self, x: int, y: int) -> asyncio.Lock:
-        pixel_key = (x, y)
-        async with self._lock:
-            if pixel_key not in self._pixel_locks:
-                self._pixel_locks[pixel_key] = asyncio.Lock()
-            self._last_time_used_locks[pixel_key] = time()
-            return self._pixel_locks[pixel_key]
-
-    async def _cleanup_locks(self):
-        current_time = time()
-        async with self._lock:
-            to_remove = []
-            for pixel_key, last_time_used in self._last_time_used_locks.items():
-                if current_time - last_time_used > self._cleanup_locks_treshold:
-                    to_remove.append(pixel_key)
-
-            for pixel_key in to_remove:
-                del self._last_time_used_locks[pixel_key]
-                del self._pixel_locks[pixel_key]
-
     async def _paint_pixel(
         self,
         session: aiohttp.ClientSession,
@@ -750,31 +723,32 @@ class NotPXBot:
             "newColor": template_pixel_hex,
         }
 
-        async with session.post(
+        response = await session.post(
             "https://notpx.app/api/v1/repaint/start",
             headers=self._headers["notpx"],
             json=payload,
             ssl=settings.ENABLE_SSL,
-        ) as response:
-            response.raise_for_status()
+        )
 
-            self._charges -= 1
-            await self._canvas_renderer.set_pixel(canvas_pixel_id, template_pixel_hex)
+        self._charges -= 1
+        await self._canvas_renderer.set_pixel(canvas_pixel_id, template_pixel_hex)
 
-            response_json = await response.json()
-            new_balance = response_json.get("balance")
+        response.raise_for_status()
+        response_json = await response.json()
 
-            if round(new_balance, 2) > round(self.balance, 2):
-                balance_increase = new_balance - self.balance
-                logger.info(
-                    f"{self.session_name} | Successfully painted pixel | +{round(balance_increase, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
-                )
-                self.balance = new_balance
-                return
+        new_balance = response_json.get("balance")
 
-            logger.warning(
-                f"{self.session_name} | Painted pixel, but balance didn't increase | Current balance: {round(self.balance, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
+        if round(new_balance, 2) > round(self.balance, 2):
+            balance_increase = new_balance - self.balance
+            logger.info(
+                f"{self.session_name} | Successfully painted pixel | +{round(balance_increase, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
             )
+            self.balance = new_balance
+            return
+
+        logger.warning(
+            f"{self.session_name} | Painted pixel, but balance didn't increase | Current balance: {round(self.balance, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
+        )
 
     async def _paint_pixels(
         self, session: aiohttp.ClientSession, attempts: int = 1
@@ -783,8 +757,6 @@ class NotPXBot:
         # consecutive_zero_rewards = 0
 
         try:
-            await self._cleanup_locks()
-
             response = await session.get(
                 self.template_url,
                 headers=self._headers["image_notpx"],
@@ -834,37 +806,34 @@ class NotPXBot:
                 #     await self._set_template(session)
                 #     return await self._paint_pixels(session, attempts=attempts)
 
-                pixel_lock = await self._get_pixel_lock(canvas_x, canvas_y)
+                canvas_array = self._canvas_renderer.get_canvas
+                canvas_2d = canvas_array.reshape(
+                    (
+                        self._canvas_renderer.CANVAS_SIZE,
+                        self._canvas_renderer.CANVAS_SIZE,
+                        4,
+                    )
+                )
 
-                async with pixel_lock:
-                    canvas_array = self._canvas_renderer.get_canvas
-                    canvas_2d = canvas_array.reshape(
-                        (
-                            self._canvas_renderer.CANVAS_SIZE,
-                            self._canvas_renderer.CANVAS_SIZE,
-                            4,
-                        )
+                template_pixel = template_2d[ty, tx]
+                canvas_pixel = canvas_2d[canvas_y, canvas_x]
+
+                if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
+                    # initial_balance = self.balance
+
+                    await self._paint_pixel(
+                        session=session,
+                        canvas_x=canvas_x,
+                        canvas_y=canvas_y,
+                        template_pixel=template_pixel,
                     )
 
-                    template_pixel = template_2d[ty, tx]
-                    canvas_pixel = canvas_2d[canvas_y, canvas_x]
+                    # if round(self.balance, 2) <= round(initial_balance, 2):
+                    #     consecutive_zero_rewards += 1
+                    # else:
+                    #     consecutive_zero_rewards = 0
 
-                    if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
-                        # initial_balance = self.balance
-
-                        await self._paint_pixel(
-                            session=session,
-                            canvas_x=canvas_x,
-                            canvas_y=canvas_y,
-                            template_pixel=template_pixel,
-                        )
-
-                        # if round(self.balance, 2) <= round(initial_balance, 2):
-                        #     consecutive_zero_rewards += 1
-                        # else:
-                        #     consecutive_zero_rewards = 0
-
-                        await asyncio.sleep(random.uniform(0.95, 1.5))
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
 
         except Exception:
             if attempts <= 3:
