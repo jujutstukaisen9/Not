@@ -1,5 +1,6 @@
 import asyncio
 import sys
+from time import time
 import traceback
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -66,6 +67,8 @@ class WebSocketManager:
     REFRESH_TOKEN_IF_NEEDED_INTERVAL = 60  # seconds
     MAX_RECONNECT_ATTEMPTS = 3  # after initial attempt
     RETRY_DELAY = 5  # seconds
+    MAX_SWITCH_ATTEMPTS = 3  # including initial attempt
+    SWITCH_TIMEOUT = 900 # 15 minutes
 
     _instance = None
 
@@ -87,6 +90,8 @@ class WebSocketManager:
         self._refresh_task: Optional[asyncio.Task] = None
         self._token_refresh_event = asyncio.Event()
         self.__connection_attempts: int = 1
+        self._switch_attempts: int = 1
+        self._last_switch_time: float = 0
         self._is_canvas_set: bool = False
 
     async def add_session(
@@ -185,11 +190,21 @@ class WebSocketManager:
         if not self._active_session:
             raise SessionErrors.NoActiveSessionError("No active session available")
 
+        if time() - self._last_switch_time < self.SWITCH_TIMEOUT:
+            if self._switch_attempts <= self.MAX_SWITCH_ATTEMPTS:
+                self._switch_attempts += 1
+                self._last_switch_time = time()
+            else:
+                logger.error("WebSocketManager | Max switch attempts reached")
+                raise SessionErrors.MaxSwitchAttemptsError(
+                    "Max switch attempts reached"
+                )
+        else:
+            self._switch_attempts = 1
+            self._last_switch_time = time()
+
         current_session_index = self.sessions.index(self._active_session)
         next_session_index = (current_session_index + 1) % len(self.sessions)
-
-        if next_session_index == 0:
-            raise SessionErrors.NoAvailableSessionsError("No available sessions")
 
         next_session = self.sessions[next_session_index]
 
