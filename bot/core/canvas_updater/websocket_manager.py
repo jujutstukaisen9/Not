@@ -68,7 +68,7 @@ class WebSocketManager:
     MAX_RECONNECT_ATTEMPTS = 3  # after initial attempt
     RETRY_DELAY = 5  # seconds
     MAX_SWITCH_ATTEMPTS = 3  # including initial attempt
-    SWITCH_TIMEOUT = 900 # 15 minutes
+    SWITCH_TIMEOUT = 600 # 10 minutes
 
     _instance = None
 
