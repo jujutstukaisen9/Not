@@ -212,7 +212,7 @@ class NotPXBot:
                 )
 
             if not session_data.get("tournament_first_round_template_id"):
-                await self._set_tournament_template(session)
+                await self._set_tournament_template(session, auth_url)
 
                 json_manager.update_account(
                     self.session_name,
@@ -957,7 +957,7 @@ class NotPXBot:
             )
 
     async def _set_tournament_template(
-        self, session: aiohttp.ClientSession, attempts: int = 1
+        self, session: aiohttp.ClientSession, auth_url: str, attempts: int = 1
     ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
@@ -976,14 +976,10 @@ class NotPXBot:
                 f"{self.session_name} | Set tournament template | Template ID: {settings.TOURNAMENT_TEMPLATE_ID}"
             )
 
-            plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
-            )
+            plausible_payload = await self._create_plausible_payload(auth_url)
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
-            plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
-            )
+            plausible_payload = await self._create_plausible_payload(auth_url)
             await self._send_plausible_event(session, plausible_payload)
 
             if attempts <= 3:
@@ -992,7 +988,7 @@ class NotPXBot:
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
                 await self._set_tournament_template(
-                    session=session, attempts=attempts + 1
+                    session=session, auth_url=auth_url, attempts=attempts + 1
                 )
 
             raise Exception(
