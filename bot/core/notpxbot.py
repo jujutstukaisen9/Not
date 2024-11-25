@@ -729,7 +729,7 @@ class NotPXBot:
         )
 
         self._charges -= 1
-        await self._canvas_renderer.set_pixel(canvas_pixel_id, template_pixel_hex)
+        self._canvas_renderer.paint_pixel(canvas_pixel_id, template_pixel_hex)
 
         response.raise_for_status()
         response_json = await response.json()
