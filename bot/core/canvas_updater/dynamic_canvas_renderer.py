@@ -1,13 +1,11 @@
-import asyncio
 import io
 from functools import lru_cache
+import json
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from PIL import Image
 from typing_extensions import Self
-
-from bot.utils.decorators import async_timer_decorator
 
 
 class DynamicCanvasRenderer:
@@ -100,7 +98,7 @@ class DynamicCanvasRenderer:
             await self._paint_pixels(self._canvas, pixels_data["data"])
 
     async def _paint_squares(
-        self, canvas_array, pixels_data: List[Dict[str, Any]]
+        self, canvas_array, events_data: List[Dict[str, str]]
     ) -> None:
         """
         Paints squares on the canvas based on the given data.
@@ -109,18 +107,30 @@ class DynamicCanvasRenderer:
             canvas_array: The numpy array representing the canvas to be modified.
             pixels_data (List[Dict[str, Any]]): Data from the WebSocket connection.
         """
-        for pixel_data in pixels_data:
-            pixel_id: int = pixel_data["pixel"]
+        for event_data in events_data:
+            event_pixe_data_string = event_data.get("data")
+            if not event_pixe_data_string:
+                raise ValueError("Can't retrieve pixel data")
+
+            event_pixel_data = json.loads(event_pixe_data_string)
+
+            if (
+                "info" not in event_pixel_data
+                or "pixelId" not in event_pixel_data["info"]
+            ):
+                raise ValueError("Missing 'info' or 'pixelId' in event pixel data")
+
+            pixel_id: int = event_pixel_data["info"]["pixelId"]
 
             x, y = self._pixel_id_to_xy(pixel_id)
 
-            square_size = getattr(self, f"{pixel_data['type'].upper()}_SIZE")
+            square_size = getattr(self, f"{event_data['type'].upper()}_SIZE")
             x = x - (square_size // 2)
             y = y - (square_size // 2)
 
             colors = (
                 self.PUMPKIN_COLORS
-                if pixel_data["type"] == "Pumpkin"
+                if event_data["type"] == "Pumpkin"
                 else self.DYNAMITE_COLORS
             )
 
