@@ -831,7 +831,7 @@ class NotPXBot:
                     # else:
                     #     consecutive_zero_rewards = 0
 
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                    await asyncio.sleep(random.uniform(0.4, 1))
 
         except Exception:
             if attempts <= 3:
