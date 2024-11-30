@@ -14,6 +14,15 @@ class NotPXAPIChecker:
     RETRY_DELAY = 5
     BASE_URL = "https://app.notpx.app"
 
+    def extract_endpoints(self, js_code):
+        pattern = r'.\.(get|post|put)\s*\(\s*[`"\']([^`"\']*)'
+
+        endpoints = re.findall(pattern, js_code)
+
+        unique_endpoints = set(endpoint[1] for endpoint in endpoints)
+
+        return sorted(unique_endpoints)
+
     async def check_api(
         self,
         session: aiohttp.ClientSession,
@@ -52,7 +61,7 @@ class NotPXAPIChecker:
                     break
 
             if not result:
-                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
+                logger.critical("API Checker | Missing script tag")
                 return False
 
             js_url = f"{self.BASE_URL}{result}"
@@ -66,13 +75,35 @@ class NotPXAPIChecker:
             match = re.search(r'VITE_API_URL:\s*"([^"]+)"', js_content)
 
             if not match:
-                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
+                logger.critical("API Checker | Missing API URL")
                 return False
 
             api_url = match.group(1)
 
             if api_url != "https://notpx.app/api/v1/":
-                dev_logger.critical(f"API Checker | {traceback.format_exc()}")
+                logger.critical("API Checker | API URL is not equal to expected")
+                return False
+
+            endpoints = self.extract_endpoints(js_content)
+            endpoints_to_check = [
+                "/users/me",
+                "/mining/claim",
+                "/image/template/list?limit=${n}&offset=${s}",
+                "/image/template/${n}",
+                "/image/template/subscribe/${n}",
+                "/image/template/my",
+                "/mining/status",
+                "/mining/boost/check/${n}",
+                "/repaint/start",
+                "/mining/task/check/${s}${a}",
+                "/tournament/template/subscribe/${n}",
+                "/mining/quest/check/secretWord",
+            ]
+
+            if not all(endpoint in endpoints for endpoint in endpoints_to_check):
+                logger.critical(
+                    f"API Checker | Missing endpoints: {set(endpoints_to_check) - set(endpoints)}"
+                )
                 return False
 
             return True
