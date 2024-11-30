@@ -119,9 +119,7 @@ class DynamicCanvasRenderer:
         """
         pixanos_data = json.loads(pixanos_data_json)
         info = pixanos_data["info"]
-        self._pixanos_repaint(
-            info["seed"], self.CANVAS_SIZE, info["percentage"], info["color"]
-        )
+        self._pixanos_repaint(info["seed"], info["percentage"], info["color"])
 
     def handle_pixel_message(self, pixel_data: Dict[str, List[int]]) -> None:
         """
@@ -216,9 +214,7 @@ class DynamicCanvasRenderer:
         self._canvas[pixel_index + 2] = rgb_color[2]
         self._canvas[pixel_index + 3] = 255
 
-    def _pixanos_repaint(
-        self, seed: int, canvas_width: int, percentage: int, hex_color: str
-    ):
+    def _pixanos_repaint(self, seed: int, percentage: float, hex_color: str):
         """
         Repaints a specified percentage of pixels on the canvas using a given color.
 
@@ -233,11 +229,10 @@ class DynamicCanvasRenderer:
             percentage (int): The percentage of total pixels to be repainted.
             color (str): The hex color code to be used for repainting the selected pixels.
         """
-
         def create_random_generator(seed_value):
             multiplier = 1664525
             increment = 1013904223
-            modulus = 2**32
+            modulus = 4294967296
             state = seed_value & 0xFFFFFFFF
 
             def random():
@@ -247,9 +242,8 @@ class DynamicCanvasRenderer:
 
             return random
 
-        canvas_height = canvas_width
-        total_pixels = canvas_width * canvas_height
-        pixels_to_repaint = int(total_pixels * (percentage / 100))
+        total_pixels = self.CANVAS_SIZE * self.CANVAS_SIZE
+        pixels_to_repaint = int(total_pixels * percentage)
 
         random_generator = create_random_generator(seed)
         selected_pixels = [i + 1 for i in range(pixels_to_repaint)]
