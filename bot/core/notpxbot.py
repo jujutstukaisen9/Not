@@ -201,23 +201,23 @@ class NotPXBot:
         plausible_payload = await self._create_plausible_payload(auth_url)
         await self._send_plausible_event(session, plausible_payload)
 
-        if settings.PARTICIPATE_IN_TOURNAMENT:
-            json_manager = JsonManager()
+        # if settings.PARTICIPATE_IN_TOURNAMENT:
+        #     json_manager = JsonManager()
 
-            session_data = json_manager.get_account_by_session_name(self.session_name)
+        #     session_data = json_manager.get_account_by_session_name(self.session_name)
 
-            if not session_data:
-                raise ValueError(
-                    f"Session name '{self.session_name}' not found in accounts.json"
-                )
+        #     if not session_data:
+        #         raise ValueError(
+        #             f"Session name '{self.session_name}' not found in accounts.json"
+        #         )
 
-            if not session_data.get("tournament_first_round_template_id"):
-                await self._set_tournament_template(session, auth_url)
+        #     if not session_data.get("tournament_first_round_template_id"):
+        #         await self._set_tournament_template(session, auth_url)
 
-                json_manager.update_account(
-                    self.session_name,
-                    tournament_first_round_template_id=settings.TOURNAMENT_TEMPLATE_ID,
-                )
+        #         json_manager.update_account(
+        #             self.session_name,
+        #             tournament_first_round_template_id=settings.TOURNAMENT_TEMPLATE_ID,
+        #         )
 
         about_me_data = await self._get_me(session)
 
