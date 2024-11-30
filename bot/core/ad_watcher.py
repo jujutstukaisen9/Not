@@ -196,6 +196,11 @@ class AdWatcher:
                     adsgram_watch_ad_url,
                     headers=self._headers["adsgram"],
                 )
+                if adsgram_response.status == 403:
+                    logger.info(
+                        f"{self.session_name} | No ads to watch | Status code: {adsgram_response.status}"
+                    )
+                    break
                 adsgram_response.raise_for_status()
                 adsgram_response_json = await adsgram_response.json()
 
