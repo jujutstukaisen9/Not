@@ -277,7 +277,6 @@ class NotPXBot:
 
         logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
 
-
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
         start_night_time = randint(
