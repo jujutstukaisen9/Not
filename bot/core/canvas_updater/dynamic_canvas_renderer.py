@@ -106,17 +106,18 @@ class DynamicCanvasRenderer:
             elif event_type == "Pixanos":
                 logger.info("DynamicCanvasRenderer | Pixanos event received")
                 dev_logger.info(f"Received Pixanos event: {event}")
-                self._process_pixanos_event(event["payload"])
+                self._process_pixanos_event(event["data"])
             else:
                 print(event)
 
-    def _process_pixanos_event(self, pixanos_data: Dict[str, Any]) -> None:
+    def _process_pixanos_event(self, pixanos_data_json: str) -> None:
         """
         Processes Pixanos event data.
 
         Args:
             pixanos_data (Dict[str, Any]): Data from the WebSocket connection.
         """
+        pixanos_data = json.loads(pixanos_data_json)
         info = pixanos_data["info"]
         self._pixanos_repaint(
             info["seed"], self.CANVAS_SIZE, info["percentage"], info["color"]
