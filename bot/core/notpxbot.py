@@ -134,7 +134,9 @@ class NotPXBot:
         while True:
             try:
                 proxy_connector = ProxyConnector().from_url(proxy) if proxy else None
-                async with aiohttp.ClientSession(connector=proxy_connector) as session:
+                async with aiohttp.ClientSession(
+                    connector=proxy_connector, timeout=aiohttp.ClientTimeout(10)
+                ) as session:
                     if proxy:
                         await self._proxy_checker(session, proxy)
 
