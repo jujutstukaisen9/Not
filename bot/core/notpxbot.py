@@ -251,8 +251,17 @@ class NotPXBot:
         while not self.websocket_manager.is_canvas_set:
             await asyncio.sleep(2)
 
-        if settings.PAINT_PIXELS and await self._check_tournament_my(session):
-            await self._paint_pixels(session)
+        if settings.PAINT_PIXELS:
+            template_available = await self._check_tournament_my(session)
+            if not template_available:
+                await self._set_tournament_template(session, auth_url)
+                template_available = await self._check_tournament_my(session)
+                if not template_available:
+                    logger.error(f"{self.session_name} | Could not set tournament template.")
+                else:
+                    await self._paint_pixels(session)
+            else:
+                await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
             await self._claim_px(session)
@@ -267,6 +276,7 @@ class NotPXBot:
             await self._watch_ads(session)
 
         logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
+
 
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
