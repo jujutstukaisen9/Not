@@ -13,7 +13,7 @@ from bot.utils.logger import dev_logger, logger
 class DynamicCanvasRenderer:
     MAX_ATTEMPTS = 3
     RETRY_DELAY = 5
-    CANVAS_SIZE = 1000
+    CANVAS_SIZE = 1024
     DYNAMITE_SIZE = 5
     DYNAMITE_COLORS = ["#171F2A"] * (DYNAMITE_SIZE * DYNAMITE_SIZE)
     PUMPKIN_SIZE = 7

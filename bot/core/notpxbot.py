@@ -21,7 +21,6 @@ from bot.core.canvas_updater.dynamic_canvas_renderer import DynamicCanvasRendere
 from bot.core.canvas_updater.websocket_manager import WebSocketManager
 from bot.core.notpx_api_checker import NotPXAPIChecker
 from bot.core.tg_mini_app_auth import TelegramMiniAppAuth
-from bot.utils.json_manager import JsonManager
 from bot.utils.logger import dev_logger, logger
 
 
@@ -203,24 +202,6 @@ class NotPXBot:
         plausible_payload = await self._create_plausible_payload(auth_url)
         await self._send_plausible_event(session, plausible_payload)
 
-        # if settings.PARTICIPATE_IN_TOURNAMENT:
-        #     json_manager = JsonManager()
-
-        #     session_data = json_manager.get_account_by_session_name(self.session_name)
-
-        #     if not session_data:
-        #         raise ValueError(
-        #             f"Session name '{self.session_name}' not found in accounts.json"
-        #         )
-
-        #     if not session_data.get("tournament_first_round_template_id"):
-        #         await self._set_tournament_template(session, auth_url)
-
-        #         json_manager.update_account(
-        #             self.session_name,
-        #             tournament_first_round_template_id=settings.TOURNAMENT_TEMPLATE_ID,
-        #         )
-
         about_me_data = await self._get_me(session)
 
         websocket_token = about_me_data.get("websocketToken")
@@ -229,9 +210,6 @@ class NotPXBot:
             raise ValueError(f"{self.session_name} | Couldn't retrieve websocket token")
 
         await self._get_status(session)
-
-        # if not await self._check_my(session):
-        #     await self._set_template(session)
 
         await self.websocket_manager.add_session(
             notpx_headers=self._headers["notpx"],
@@ -256,7 +234,7 @@ class NotPXBot:
         while not self.websocket_manager.is_canvas_set:
             await asyncio.sleep(2)
 
-        if settings.PAINT_PIXELS and await self._check_my(session):
+        if settings.PAINT_PIXELS and await self._check_tournament_my(session):
             await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
@@ -534,12 +512,12 @@ class NotPXBot:
 
             raise Exception(f"{self.session_name} | Error while setting template")
 
-    async def _check_my(
+    async def _check_tournament_my(
         self, session: aiohttp.ClientSession, attempts: int = 1
     ) -> bool | None:
         try:
             response = await session.get(
-                "https://notpx.app/api/v1/image/template/my",
+                "https://notpx.app/api/v1/tournament/template/subscribe/my",
                 headers=self._headers["notpx"],
                 ssl=settings.ENABLE_SSL,
             )
@@ -548,11 +526,11 @@ class NotPXBot:
             elif response.status == 200:
                 response_json = await response.json()
 
-                self.template_id = response_json.get("templateId")
+                self.template_id = response_json.get("id")
                 self.template_url = response_json.get("url")
                 self.template_x = response_json.get("x")
                 self.template_y = response_json.get("y")
-                self.template_size = response_json.get("imageSize")
+                self.template_size = response_json.get("size")
 
                 return True
             else:
@@ -563,7 +541,9 @@ class NotPXBot:
                     f"{self.session_name} | Failed to check my, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                return await self._check_my(session=session, attempts=attempts + 1)
+                return await self._check_tournament_my(
+                    session=session, attempts=attempts + 1
+                )
             raise Exception(f"{self.session_name} | Error while checking my")
 
     async def _get_status(
@@ -746,6 +726,7 @@ class NotPXBot:
             self.balance = new_balance
             return
 
+        self._balance = new_balance
         logger.warning(
             f"{self.session_name} | Painted pixel, but balance didn't increase | Current balance: {round(self.balance, 2)} PX | Charge remaining: {self._charges} | Current balance: {round(new_balance, 2)} PX"
         )
@@ -753,9 +734,6 @@ class NotPXBot:
     async def _paint_pixels(
         self, session: aiohttp.ClientSession, attempts: int = 1
     ) -> None:
-        # MAX_CONSECUTIVE_ZERO = 5
-        # consecutive_zero_rewards = 0
-
         try:
             response = await session.get(
                 self.template_url,
@@ -799,13 +777,6 @@ class NotPXBot:
                 if self._charges <= 0:
                     break
 
-                # if consecutive_zero_rewards >= MAX_CONSECUTIVE_ZERO:
-                #     logger.warning(
-                #         f"{self.session_name} | No reward for {MAX_CONSECUTIVE_ZERO} consecutive times. Resetting template."
-                #     )
-                #     await self._set_template(session)
-                #     return await self._paint_pixels(session, attempts=attempts)
-
                 canvas_array = self._canvas_renderer.get_canvas
                 canvas_2d = canvas_array.reshape(
                     (
@@ -819,19 +790,12 @@ class NotPXBot:
                 canvas_pixel = canvas_2d[canvas_y, canvas_x]
 
                 if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
-                    # initial_balance = self.balance
-
                     await self._paint_pixel(
                         session=session,
                         canvas_x=canvas_x,
                         canvas_y=canvas_y,
                         template_pixel=template_pixel,
                     )
-
-                    # if round(self.balance, 2) <= round(initial_balance, 2):
-                    #     consecutive_zero_rewards += 1
-                    # else:
-                    #     consecutive_zero_rewards = 0
 
                     await asyncio.sleep(random.uniform(0.6, 1.2))
 
