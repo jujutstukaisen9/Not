@@ -68,6 +68,7 @@ class TelegramMiniAppAuth:
 
             query_params = parse_qs(telegram_web_data)
             user_data = self._get_user_data(query_params)
+            chat_instance = query_params.get("chat_instance", [None])[0]
 
             if self._telegram_client.is_connected:
                 await self._telegram_client.disconnect()
@@ -76,6 +77,7 @@ class TelegramMiniAppAuth:
                 "init_data": telegram_web_data,
                 "auth_url": auth_url,
                 "user_data": user_data,
+                "chat_instance": chat_instance,
             }
 
             return tg_auth_app_data

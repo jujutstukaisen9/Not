@@ -1,12 +1,14 @@
 import asyncio
 import io
 import random
+import re
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from random import choice, randint
 from time import time
 from typing import Dict, List, NoReturn
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from uuid import uuid4
 
 import aiohttp
@@ -17,6 +19,7 @@ from PIL import Image
 from pyrogram.client import Client
 
 from bot.config.config import settings
+from bot.core.ad_watcher import AdWatcher
 from bot.core.canvas_updater.dynamic_canvas_renderer import DynamicCanvasRenderer
 from bot.core.canvas_updater.websocket_manager import WebSocketManager
 from bot.core.notpx_api_checker import NotPXAPIChecker
@@ -122,11 +125,24 @@ class NotPXBot:
             "plausible": create_headers({"Sec-Fetch-Site": "cross-site"}),
             "websocket": create_headers(websocket_headers),
             "image_notpx": create_headers(),
+            "adsgram": create_headers({"X-Requested-With": "XMLHttpRequest"}),
         }
 
     async def run(self, user_agent: str, proxy: str | None) -> NoReturn:
+        chromium_version = re.search(r"Chrome/([\d.]+)", user_agent)
+        if not chromium_version:
+            raise Exception("Chromium version not found in user agent.")
+        self.chromium_version = chromium_version.group(1)
+
+        sec_ch_ua = f'"Chromium";v="{chromium_version}", "Android WebView";v="{chromium_version}", "Not-A.Brand";v="99"'
+        sec_ch_ua_mobile = "?1"
+        sec_ch_ua_platform = '"Android"'
+
         for header in self._headers.values():
             header["User-Agent"] = user_agent
+            header["Sec-Ch-Ua"] = sec_ch_ua
+            header["Sec-Ch-Ua-Mobile"] = sec_ch_ua_mobile
+            header["Sec-Ch-Ua-Platform"] = sec_ch_ua_platform
 
         self.proxy = proxy
 
@@ -192,6 +208,7 @@ class NotPXBot:
 
         auth_url = tg_auth_app_data["auth_url"]
         self.user_data = tg_auth_app_data["user_data"]
+        self.chat_instance = tg_auth_app_data["chat_instance"]
 
         self._headers["notpx"]["Authorization"] = (
             f"initData {tg_auth_app_data['init_data']}"
@@ -199,7 +216,7 @@ class NotPXBot:
 
         await self._send_tganalytics_event(session)
 
-        plausible_payload = await self._create_plausible_payload(auth_url)
+        plausible_payload = await self._create_plausible_payload(u=auth_url)
         await self._send_plausible_event(session, plausible_payload)
 
         about_me_data = await self._get_me(session)
@@ -245,6 +262,9 @@ class NotPXBot:
 
         if settings.COMPLETE_QUESTS and self._quests_to_complete:
             await self._quest_completion(session)
+
+        if settings.WATCH_ADS:
+            await self._watch_ads(session)
 
         logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
 
@@ -388,8 +408,10 @@ class NotPXBot:
                 f"{self.session_name} | Error while sending plausible event"
             )
 
-    async def _create_plausible_payload(self, url: str) -> Dict[str, str | None]:
-        return {"n": "pageview", "u": url, "d": "notpx.app", "r": None}
+    async def _create_plausible_payload(
+        self, u: str, n: str = "pageview", d: str = "notpx.app", r: str | None = None
+    ) -> Dict[str, str | None]:
+        return {"n": n, "u": u, "d": d, "r": r}
 
     async def _solve_task(self, task: str) -> str:
         try:
@@ -414,7 +436,7 @@ class NotPXBot:
     ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/claiming"
+                u="https://app.notpx.app/claiming"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -433,12 +455,12 @@ class NotPXBot:
             )
 
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception as error:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -456,7 +478,7 @@ class NotPXBot:
     ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/template"
+                u="https://app.notpx.app/template"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -494,12 +516,12 @@ class NotPXBot:
             logger.info(f"{self.session_name} | Successfully set template")
 
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -613,7 +635,7 @@ class NotPXBot:
 
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/claiming"
+                u="https://app.notpx.app/claiming"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -625,20 +647,20 @@ class NotPXBot:
                             await asyncio.sleep(random.uniform(1, 2))
                             break
                         plausible_payload = await self._create_plausible_payload(
-                            "https://app.notpx.app/"
+                            u="https://app.notpx.app/"
                         )
                         await self._send_plausible_event(session, plausible_payload)
                         return
                 else:
                     plausible_payload = await self._create_plausible_payload(
-                        "https://app.notpx.app/"
+                        u="https://app.notpx.app/"
                     )
                     await self._send_plausible_event(session, plausible_payload)
                     return
 
         except Exception:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -819,7 +841,7 @@ class NotPXBot:
     ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/claiming"
+                u="https://app.notpx.app/claiming"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -873,7 +895,17 @@ class NotPXBot:
                             f"{self.session_name} | Completed task: Bonus for {league_name} league"
                         )
 
-                    elif task_list_key == "click_tasks_list":
+                    elif (
+                        task_list_key == "click_tasks_list"
+                        and settings.COMPLETE_DANGER_TASKS
+                    ):
+                        plausible_payload = await self._create_plausible_payload(
+                            u="https://app.notpx.app/claiming", n="task_utgardApp"
+                        )
+                        await self._send_plausible_event(session, plausible_payload)
+
+                        await asyncio.sleep(random.uniform(2, 3.5))
+
                         response = await session.get(
                             f"https://notpx.app/api/v1/mining/task/check/{task_value}",
                             headers=self._headers["notpx"],
@@ -897,13 +929,13 @@ class NotPXBot:
             self._tasks_to_complete = {}
 
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
         except Exception:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -927,7 +959,7 @@ class NotPXBot:
     ) -> None:
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/tournament"
+                u="https://app.notpx.app/tournament"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -942,10 +974,10 @@ class NotPXBot:
                 f"{self.session_name} | Set tournament template | Template ID: {settings.TOURNAMENT_TEMPLATE_ID}"
             )
 
-            plausible_payload = await self._create_plausible_payload(auth_url)
+            plausible_payload = await self._create_plausible_payload(u=auth_url)
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
-            plausible_payload = await self._create_plausible_payload(auth_url)
+            plausible_payload = await self._create_plausible_payload(u=auth_url)
             await self._send_plausible_event(session, plausible_payload)
 
             if attempts <= 3:
@@ -966,7 +998,7 @@ class NotPXBot:
     ):
         try:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/secrets"
+                u="https://app.notpx.app/secrets"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -1002,12 +1034,12 @@ class NotPXBot:
             self._quests_to_complete = []
 
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
             plausible_payload = await self._create_plausible_payload(
-                "https://app.notpx.app/"
+                u="https://app.notpx.app/"
             )
             await self._send_plausible_event(session, plausible_payload)
 
@@ -1020,6 +1052,44 @@ class NotPXBot:
 
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while completing secret word quest"
+            )
+
+    async def _watch_ads(self, session: aiohttp.ClientSession, attempts: int = 1):
+        try:
+            plausible_payload = await self._create_plausible_payload(
+                u="https://app.notpx.app/claiming"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
+            ad_watcher = AdWatcher(
+                user_data=self.user_data,
+                session_name=self.session_name,
+                headers=self._headers,
+                chat_instance=int(self.chat_instance),
+                balance=self.balance,
+            )
+
+            self.balance = await ad_watcher.watch_ads(session=session)
+
+            plausible_payload = await self._create_plausible_payload(
+                u="https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
+        except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                u="https://app.notpx.app/"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+            if attempts <= 3:
+                logger.warning(
+                    f"{self.session_name} | Failed to watch ads, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                )
+                await asyncio.sleep(self.RETRY_DELAY)
+                await self._watch_ads(session=session, attempts=attempts + 1)
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while watching ads"
             )
 
 
