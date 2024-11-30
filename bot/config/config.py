@@ -27,5 +27,6 @@ class Settings(BaseSettings):
     COMPLETE_TASKS: bool = True
     PARTICIPATE_IN_TOURNAMENT: bool = True
     COMPLETE_QUESTS: bool = True
+    COMPLETE_DANGER_TASKS: bool = False
 
 settings = Settings()  # type: ignore
