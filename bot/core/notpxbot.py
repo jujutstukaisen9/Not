@@ -319,6 +319,8 @@ class NotPXBot:
         if settings.WATCH_ADS:
             await self._watch_ads(session)
 
+        await self._get_tournament_results(session, auth_url)
+
         logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
 
         return next_iteration_sleep_time
@@ -1033,6 +1035,53 @@ class NotPXBot:
                 f"{self.session_name} | Max retry attempts reached while completing tasks"
             )
 
+    async def _get_tournament_results(
+        self, session: aiohttp.ClientSession,
+        auth_url: str,
+        attempts: int = 1,
+    ) -> None:
+        try:
+            plausible_payload = await self._create_plausible_payload(
+                u="https://app.notpx.app/tournament"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+        
+            response = await session.get(
+                "https://notpx.app/api/v1/tournament/user/results",
+                headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL
+            )
+            response.raise_for_status()
+            response_json = await response.json()
+
+            first_round = response_json.get("rounds", [{}])[0]
+            player_rank = first_round.get("rank", None)
+            template_rank = first_round.get("template", {}).get("rank", None)
+            logger.info(f"{self.session_name} | Player rank: {player_rank} | Template rank {template_rank}")
+
+            plausible_payload = await self._create_plausible_payload(u=auth_url)
+            await self._send_plausible_event(session, plausible_payload)
+        except Exception:
+            plausible_payload = await self._create_plausible_payload(
+                u=auth_url
+            )
+            await self._send_plausible_event(session, plausible_payload)
+
+            if attempts <= 3:
+                logger.warning(
+                    f"{self.session_name} | Failed to get tournament results, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                )
+                await asyncio.sleep(self.RETRY_DELAY)
+                await self._get_tournament_results(
+                    session=session,
+                    auth_url=auth_url,
+                    attempts=attempts + 1,
+                )
+
+            raise Exception(
+                f"{self.session_name} | Max retry attempts reached while getting tournament results"
+            )
+    
     async def _set_tournament_template(
         self, session: aiohttp.ClientSession, auth_url: str, attempts: int = 1
     ) -> None:
