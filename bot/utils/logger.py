@@ -1,12 +1,9 @@
-import io
 import logging
 import logging.handlers
 import sys
 import time
 
 import colorlog
-
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 logging.Formatter.converter = time.localtime
 
