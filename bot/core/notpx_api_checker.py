@@ -85,25 +85,59 @@ class NotPXAPIChecker:
                 return False
 
             endpoints = self.extract_endpoints(js_content)
-            endpoints_to_check = [
-                "/users/me",
-                "/mining/claim",
-                "/image/template/list?limit=${n}&offset=${s}",
+            known_endpoints = [
+                "/buy/list",
+                "/buy/stars",
+                "/daily/free",
+                "/daily/list",
+                "/history/all?offset=${n}&limit=${s}",
+                "/image/get/${n}",
+                "/image/mask${s}",
+                "/image/prices",
                 "/image/template/${n}",
-                "/image/template/subscribe/${n}",
+                "/image/template/list?limit=${n}&offset=${s}",
                 "/image/template/my",
-                "/mining/status",
+                "/image/template/sizes/${n}",
+                "/image/template/subscribe/${n}",
+                "/image/template/upload",
                 "/mining/boost/check/${n}",
-                "/repaint/start",
-                "/mining/task/check/${s}${a}",
-                "/tournament/template/subscribe/${n}",
+                "/mining/claim",
                 "/mining/quest/check/secretWord",
+                "/mining/quest/stats ",
+                "/mining/status",
+                "/mining/task/check/${s}${a}",
+                "/ratings/personal?league=${n.toLowerCase()}&limit=20",
+                "/ratings/squads/${n}",
+                "/ratings/squads?league=${n.toLowerCase()}&limit=20",
+                "/repaint/special",
+                "/repaint/start",
+                "/tournament/periods",
+                "/tournament/template/${n}",
+                "/tournament/template/list/random?limit=16",
+                "/tournament/template/list?limit=${n}&offset=${s}",
+                "/tournament/template/subscribe/${n}",
+                "/tournament/template/subscribe/my",
+                "/tournament/template/upload",
+                "/tournament/user/results",
+                "/transactions/start",
+                "/users/me",
+                "/users/mypixels/count",
+                "/users/mypixels/sold?offset=${n}&limit=${s}",
+                "/users/mypixels?offset=${n}&limit=${s}",
+                "/users/rewards/${n}",
+                "/users/rewards/claim",
+                "/users/rewards/distribution/${n}",
+                "/users/stats",
+                "/users/wallet/${n}",
+                "/wallet/ton-proof/check-proof",
+                "/wallet/ton-proof/generate-payload",
+                "cf-ipcountry",
+                "initData",
+                "skipIntro",
             ]
 
-            if not all(endpoint in endpoints for endpoint in endpoints_to_check):
-                logger.critical(
-                    f"API Checker | Missing endpoints: {set(endpoints_to_check) - set(endpoints)}"
-                )
+            if endpoints != known_endpoints:
+                logger.critical("API Checker | Endpoints are not equal to expected")
                 return False
 
             return True
