@@ -333,12 +333,23 @@ class NotPXBot:
         end_night_time = randint(
             settings.NIGHT_END_HOURS[0], settings.NIGHT_END_HOURS[1]
         )
-        if start_night_time <= current_hour <= end_night_time:
+
+        is_night_time = (
+            current_hour >= start_night_time or 
+            current_hour <= end_night_time
+        )
+
+        if is_night_time:
             random_minutes_to_sleep_time = randint(
                 settings.ADDITIONAL_NIGHT_SLEEP_MINUTES[0],
                 settings.ADDITIONAL_NIGHT_SLEEP_MINUTES[1],
             )
-            sleep_time_in_hours = end_night_time - current_hour
+            
+            if current_hour >= start_night_time:
+                sleep_time_in_hours = 24 - current_hour + end_night_time
+            else:
+                sleep_time_in_hours = end_night_time - current_hour
+            
             logger.info(
                 f"{self.session_name} | It's night time. Sleeping for: {int(sleep_time_in_hours)} hours and {random_minutes_to_sleep_time} minutes"
             )
