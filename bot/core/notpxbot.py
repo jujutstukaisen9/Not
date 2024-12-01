@@ -1057,7 +1057,7 @@ class NotPXBot:
             first_round = response_json.get("rounds", [{}])[0]
             player_rank = first_round.get("rank", None)
             template_rank = first_round.get("template", {}).get("rank", None)
-            logger.info(f"{self.session_name} | Player rank: {player_rank} | Template rank {template_rank}")
+            logger.info(f"{self.session_name} | Player rank: {player_rank} | Template rank: {template_rank}")
 
             plausible_payload = await self._create_plausible_payload(u=auth_url)
             await self._send_plausible_event(session, plausible_payload)
