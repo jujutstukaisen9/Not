@@ -72,6 +72,10 @@
       <td>❌</td>
     </tr>
     <tr>
+      <td>Автоматический просмотр рекламы</td>
+      <td>✅</td>
+    </tr>
+    <tr>
       <td>Автоматическое использование бомб</td>
       <td><img src="https://img.shields.io/badge/В_разработке-orange?style=flat-square" alt="X badge"></td>
     </tr>
@@ -179,6 +183,14 @@
       <td>Дополнительный диапазон минут для сна ночью</td>
     </tr>
     <tr>
+      <td>ROUND_START_TIME_DELTA_MINUTES</td>
+      <td>Дополнительные минуты после начала раунда</td>
+    </tr>
+    <tr>
+      <td>ROUND_END_TIME_DELTA_MINUTES</td>
+      <td>Дополнительные минуты до конца раунда</td>
+    </tr>
+    <tr>
       <td>CLAIM_PX</td>
       <td>True/False автоматический сбор px</td>
     </tr>
@@ -200,7 +212,15 @@
     </tr>
     <tr>
       <td>COMPLETE_QUESTS</td>
-      <td>True/False автоматический ввод известных нам секретных слов</td>
+      <td>True/False авто ввод известных нам секретных слов</td>
+    </tr>
+    <tr>
+      <td>COMPLETE_DANGER_TASKS</td>
+      <td>True/False авто выполнение опасных заданий</td>
+    </tr>
+    <tr>
+      <td>WATCH_ADS</td>
+      <td>True/False просмотр рекламы</td>
     </tr>
   </tbody>
 </table>

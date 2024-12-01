@@ -68,8 +68,12 @@ Automated script for NotPixel with painting on canvas using a template, passing 
       <td>✅</td>
     </tr>
     <tr>
-      <td>Aut-input of daily secret words</td>
+      <td>Auto-input of daily secret words</td>
       <td>❌</td>
+    </tr>
+    <tr>
+      <td>Watching ads</td>
+      <td>✅</td>
     </tr>
     <tr>
       <td>Auto-use bombs</td>
@@ -179,6 +183,14 @@ We update NotPixelBot according to changes in NotPixel.
       <td>Additional minutes range to sleep at night</td>
     </tr>
     <tr>
+      <td>ROUND_START_TIME_DELTA_MINUTES</td>
+      <td>Additional minutes after the start of the round</td>
+    </tr>
+    <tr>
+      <td>ROUND_END_TIME_DELTA_MINUTES</td>
+      <td>Additional minutes before the end of the round</td>
+    </tr>
+    <tr>
       <td>CLAIM_PX</td>
       <td>True/False auto-claim px</td>
     </tr>
@@ -201,6 +213,14 @@ We update NotPixelBot according to changes in NotPixel.
     <tr>
       <td>COMPLETE_QUESTS</td>
       <td>True/False auto-input of the secret words we know</td>
+    </tr>
+    <tr>
+      <td>COMPLETE_DANGER_TASKS</td>
+      <td>True/False auto-completing dangerous tasks</td>
+    </tr>
+    <tr>
+      <td>WATCH_ADS</td>
+      <td>True/False auto-watch ads</td>
     </tr>
   </tbody>
 </table>
