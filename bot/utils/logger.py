@@ -1,9 +1,12 @@
+import io
 import logging
 import logging.handlers
 import sys
 import time
 
 import colorlog
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 logging.Formatter.converter = time.localtime
 
@@ -14,7 +17,11 @@ console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
 
 file_handler_user = logging.handlers.RotatingFileHandler(
-    "logs/user_logs.log", mode="a", maxBytes=10 * 1024 * 1024, backupCount=5
+    "logs/user_logs.log",
+    mode="a",
+    maxBytes=10 * 1024 * 1024,
+    backupCount=5,
+    encoding="utf-8",
 )
 file_handler_user.setLevel(logging.INFO)
 
@@ -46,7 +53,11 @@ dev_logger = logging.getLogger("dev_logger")
 dev_logger.setLevel(logging.DEBUG)
 
 file_handler_dev = logging.handlers.RotatingFileHandler(
-    "logs/dev_logs.log", mode="a", maxBytes=10 * 1024 * 1024, backupCount=5
+    "logs/dev_logs.log",
+    mode="a",
+    maxBytes=10 * 1024 * 1024,
+    backupCount=5,
+    encoding="utf-8",
 )
 file_handler_dev.setLevel(logging.DEBUG)
 
