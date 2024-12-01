@@ -1,10 +1,12 @@
 import asyncio
-from datetime import datetime, timezone
 import random
 import re
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import aiohttp
+
+from bot.config.config import settings
 from bot.utils.logger import logger
 
 
@@ -49,21 +51,23 @@ class AdWatcher:
 
         render_url = trackings_data[0].get("value")
         response_render = await session.get(
-            render_url, headers=self._headers["adsgram"]
+            render_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
         )
         response_render.raise_for_status()
 
         await asyncio.sleep(2)
 
         show_url = trackings_data[1].get("value")
-        response_show = await session.get(show_url, headers=self._headers["adsgram"])
+        response_show = await session.get(
+            show_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
+        )
         response_show.raise_for_status()
 
         await asyncio.sleep(13)
 
         reward_url = trackings_data[4].get("value")
         response_reward = await session.get(
-            reward_url, headers=self._headers["adsgram"]
+            reward_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
         )
         response_reward.raise_for_status()
 
@@ -126,7 +130,7 @@ class AdWatcher:
             if event_name in ["start", "complete"]:
                 event_url = f"{self.BASE_ADSGRAM_URL}event?record={record}&trackingtypeid={tracking_type_id}&user_timestamp={timestamp}&mediaplayhead={mediaplayhead}&type={event_name}"
                 event_response = await session.get(
-                    event_url, headers=self._headers["adsgram"]
+                    event_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
                 )
                 event_response.raise_for_status()
 
@@ -150,7 +154,7 @@ class AdWatcher:
                 )
 
                 event_response = await session.get(
-                    event_url, headers=self._headers["adsgram"]
+                    event_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
                 )
                 event_response.raise_for_status()
 
@@ -160,7 +164,7 @@ class AdWatcher:
             elif event_name == "reward":
                 event_url = trackings_data[tracking_type_id].get("value")
                 reward_response = await session.get(
-                    event_url, headers=self._headers["adsgram"]
+                    event_url, headers=self._headers["adsgram"], ssl=settings.ENABLE_SSL
                 )
                 reward_response.raise_for_status()
 
@@ -195,6 +199,7 @@ class AdWatcher:
                 adsgram_response = await session.get(
                     adsgram_watch_ad_url,
                     headers=self._headers["adsgram"],
+                    ssl=settings.ENABLE_SSL,
                 )
                 if adsgram_response.status == 403:
                     logger.info(

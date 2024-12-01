@@ -4,11 +4,10 @@ import random
 import re
 import sys
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from random import choice, randint
 from time import time
-from typing import Dict, List, NoReturn
-from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+from typing import Any, Dict, List, NoReturn
 from uuid import uuid4
 
 import aiohttp
@@ -155,17 +154,27 @@ class NotPXBot:
                     if proxy:
                         await self._proxy_checker(session, proxy)
 
-                    await self._perform_notpx_actions(session, self.telegram_client)
+                    next_iteration_sleep_time = await self._perform_notpx_actions(
+                        session, self.telegram_client
+                    )
 
-                minutes_to_sleep = random.randint(
-                    settings.ITERATION_SLEEP_MINUTES[0],
-                    settings.ITERATION_SLEEP_MINUTES[1],
-                )
-                sleep_time = minutes_to_sleep * 60
-                logger.info(
-                    f"{self.session_name} | Sleeping for: {minutes_to_sleep // 60} hours and {minutes_to_sleep % 60} minutes"
-                )
-                await asyncio.sleep(sleep_time)
+                if not next_iteration_sleep_time:
+                    minutes_to_sleep = random.randint(
+                        settings.ITERATION_SLEEP_MINUTES[0],
+                        settings.ITERATION_SLEEP_MINUTES[1],
+                    )
+                    sleep_time = minutes_to_sleep * 60
+                    logger.info(
+                        f"{self.session_name} | Sleeping for: {minutes_to_sleep // 60} hours and {minutes_to_sleep % 60} minutes"
+                    )
+                    await asyncio.sleep(sleep_time)
+                else:
+                    minutes_to_sleep = int((next_iteration_sleep_time % 3600) // 60)
+                    seconds_to_sleep = int(next_iteration_sleep_time % 60)
+                    logger.info(
+                        f"{self.session_name} | Sleeping for: {minutes_to_sleep % 60} minutes and {seconds_to_sleep} seconds"
+                    )
+                    await asyncio.sleep(next_iteration_sleep_time)
             except Exception as error:
                 handle_error(self.session_name, error)
                 logger.info(
@@ -251,13 +260,48 @@ class NotPXBot:
         while not self.websocket_manager.is_canvas_set:
             await asyncio.sleep(2)
 
-        if settings.PAINT_PIXELS:
+        round_period = await self._get_round_period(session)
+        if not round_period:
+            raise ValueError(f"{self.session_name} | Couldn't retrieve round period")
+
+        now = datetime.now(timezone.utc)
+        round_start_time = datetime.fromisoformat(
+            round_period["StartTime"].replace("Z", "+00:00")
+        ) + timedelta(minutes=settings.ROUND_START_TIME_DELTA_MINUTES)
+        round_end_time = datetime.fromisoformat(
+            round_period["EndTime"].replace("Z", "+00:00")
+        ) - timedelta(minutes=settings.ROUND_END_TIME_DELTA_MINUTES)
+
+        is_after_start_time = now >= round_start_time
+        is_before_end_time = now < round_end_time
+
+        next_iteration_sleep_time = None
+
+        if not is_after_start_time:
+            time_to_start = round_start_time - now
+            min_sleep_time = timedelta(minutes=settings.ITERATION_SLEEP_MINUTES[0])
+
+            if time_to_start <= min_sleep_time:
+                next_iteration_sleep_time = time_to_start.total_seconds()
+                minutes = int(next_iteration_sleep_time // 60)
+                seconds = int(next_iteration_sleep_time % 60)
+                logger.info(
+                    f"{self.session_name} | Setting up next iteration sleep before next round: {minutes} minutes {seconds} seconds"
+                )
+
+        should_paint_pixels = (
+            settings.PAINT_PIXELS and is_after_start_time and is_before_end_time
+        )
+
+        if should_paint_pixels:
             template_available = await self._check_tournament_my(session)
             if not template_available:
                 await self._set_tournament_template(session, auth_url)
                 template_available = await self._check_tournament_my(session)
                 if not template_available:
-                    logger.error(f"{self.session_name} | Could not set tournament template.")
+                    logger.error(
+                        f"{self.session_name} | Could not set tournament template."
+                    )
                 else:
                     await self._paint_pixels(session)
             else:
@@ -276,6 +320,8 @@ class NotPXBot:
             await self._watch_ads(session)
 
         logger.info(f"{self.session_name} | All done | Balance: {self.balance}")
+
+        return next_iteration_sleep_time
 
     async def _handle_night_sleep(self) -> None:
         current_hour = datetime.now().hour
@@ -1100,6 +1146,36 @@ class NotPXBot:
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while watching ads"
             )
+
+    async def _get_round_period(
+        self, session: aiohttp.ClientSession, attempts: int = 1
+    ) -> Dict[str, Any] | None:
+        try:
+            response = await session.get(
+                "https://notpx.app/api/v1/tournament/periods",
+                headers=self._headers["notpx"],
+                ssl=settings.ENABLE_SSL,
+            )
+            response.raise_for_status()
+            response_json = await response.json()
+
+            all_periods = response_json.get("allPeriods")
+
+            for period in all_periods:
+                if period.get("PeriodType") == "round":
+                    return period
+
+            return None
+        except Exception:
+            if attempts <= 3:
+                logger.warning(
+                    f"{self.session_name} | Failed to get active period, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
+                )
+                await asyncio.sleep(self.RETRY_DELAY)
+                return await self._get_round_period(
+                    session=session, attempts=attempts + 1
+                )
+            raise Exception(f"{self.session_name} | Error while getting active period")
 
 
 def handle_error(session_name, error: Exception) -> None:
