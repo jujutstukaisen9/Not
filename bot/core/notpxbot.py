@@ -872,8 +872,10 @@ class NotPXBot:
                                 canvas_y=canvas_y,
                                 template_pixel=template_pixel,
                             )
-                        await asyncio.sleep(random.uniform(0.6, 1.2))
-                    await asyncio.sleep(0.01)
+
+                            await asyncio.sleep(random.uniform(0.6, 1.2))
+
+                    await asyncio.sleep(random.uniform(0.6, 1.2))
             else:
                 random.shuffle(pixels_to_paint)
                 for tx, ty, canvas_x, canvas_y in pixels_to_paint:
@@ -896,8 +898,8 @@ class NotPXBot:
                             canvas_y=canvas_y,
                             template_pixel=template_pixel,
                         )
-                    await asyncio.sleep(random.uniform(0.6, 1.2))
 
+                        await asyncio.sleep(random.uniform(0.6, 1.2))
         except Exception:
             if attempts <= 3:
                 logger.warning(
