@@ -305,6 +305,7 @@ class NotPXBot:
                 else:
                     await self._paint_pixels(session)
             else:
+                await self._get_tournament_results(session, auth_url)
                 await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
@@ -1031,6 +1032,33 @@ class NotPXBot:
                 f"{self.session_name} | Max retry attempts reached while completing tasks"
             )
 
+    async def _get_tournament_results(
+        self, session: aiohttp.ClientSession,
+        auth_url: str
+    ) -> None:
+        try:
+            plausible_payload = await self._create_plausible_payload(
+                u="https://app.notpx.app/tournament"
+            )
+            await self._send_plausible_event(session, plausible_payload)
+        
+            response = await session.get("https://notpx.app/api/v1/tournament/user/results",
+                                        headers=self._headers["notpx"],
+                                        ssl=settings.ENABLE_SSL)
+            response.raise_for_status()
+            response_json = await response.json()
+            
+            rank = response_json.get("rounds", [{}])[0].get("rank", None)
+            logger.info(f"{self.session_name} | Tournament rank: {rank}")
+
+            plausible_payload = await self._create_plausible_payload(u=auth_url)
+            await self._send_plausible_event(session, plausible_payload)
+
+        except Exception:
+            logger.warning(
+                f"{self.session_name} | Failed to get tournament results"
+            )
+    
     async def _set_tournament_template(
         self, session: aiohttp.ClientSession, auth_url: str, attempts: int = 1
     ) -> None:
