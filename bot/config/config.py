@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     COMPLETE_QUESTS: bool = True
     COMPLETE_DANGER_TASKS: bool = False
     WATCH_ADS: bool = False
+    TRY_TO_USE_ALL_CHARGES: bool = True
 
 
 settings = Settings()  # type: ignore

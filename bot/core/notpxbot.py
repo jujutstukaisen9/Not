@@ -78,9 +78,7 @@ class NotPXBot:
                 "leagueBonusGold": "leagueBonusGold",
                 "leagueBonusPlatinum": "leagueBonusPlatinum",
             },
-            "click_tasks_list": {
-                "frogApp": "frogApp"
-            },
+            "click_tasks_list": {"frogApp": "frogApp"},
         }
         self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
         self._league_weights: Dict[str, int] = {
@@ -851,13 +849,36 @@ class NotPXBot:
                     canvas_y = self.template_y + ty
                     pixels_to_paint.append((tx, ty, canvas_x, canvas_y))
 
-            while self._charges > 0:
+            if settings.TRY_TO_USE_ALL_CHARGES:
+                while self._charges > 0:
+                    random.shuffle(pixels_to_paint)
+                    for tx, ty, canvas_x, canvas_y in pixels_to_paint:
+                        if self._charges <= 0:
+                            break
+                        canvas_array = self._canvas_renderer.get_canvas
+                        canvas_2d = canvas_array.reshape(
+                            (
+                                self._canvas_renderer.CANVAS_SIZE,
+                                self._canvas_renderer.CANVAS_SIZE,
+                                4,
+                            )
+                        )
+                        template_pixel = template_2d[ty, tx]
+                        canvas_pixel = canvas_2d[canvas_y, canvas_x]
+                        if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
+                            await self._paint_pixel(
+                                session=session,
+                                canvas_x=canvas_x,
+                                canvas_y=canvas_y,
+                                template_pixel=template_pixel,
+                            )
+                        await asyncio.sleep(random.uniform(0.6, 1.2))
+                    await asyncio.sleep(0.01)
+            else:
                 random.shuffle(pixels_to_paint)
-
                 for tx, ty, canvas_x, canvas_y in pixels_to_paint:
                     if self._charges <= 0:
                         break
-
                     canvas_array = self._canvas_renderer.get_canvas
                     canvas_2d = canvas_array.reshape(
                         (
@@ -866,10 +887,8 @@ class NotPXBot:
                             4,
                         )
                     )
-
                     template_pixel = template_2d[ty, tx]
                     canvas_pixel = canvas_2d[canvas_y, canvas_x]
-
                     if not np.array_equal(template_pixel[:3], canvas_pixel[:3]):
                         await self._paint_pixel(
                             session=session,
@@ -877,10 +896,7 @@ class NotPXBot:
                             canvas_y=canvas_y,
                             template_pixel=template_pixel,
                         )
-
-                        await asyncio.sleep(random.uniform(0.6, 1.2))
-
-                    await asyncio.sleep(0.01)
+                    await asyncio.sleep(random.uniform(0.6, 1.2))
 
         except Exception:
             if attempts <= 3:
