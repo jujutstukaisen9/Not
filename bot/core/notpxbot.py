@@ -78,7 +78,9 @@ class NotPXBot:
                 "leagueBonusGold": "leagueBonusGold",
                 "leagueBonusPlatinum": "leagueBonusPlatinum",
             },
-            "click_tasks_list": {},
+            "click_tasks_list": {
+                "frogApp": "frogApp"
+            },
         }
         self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
         self._league_weights: Dict[str, int] = {
