@@ -89,8 +89,7 @@ class NotPXBot:
             "gold": 2,
             "platinum": 3,
         }
-        self._quests_list: List[str] = [
-        ]
+        self._quests_list: List[str] = []
         self._quests_to_complete: List[str] = []
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
 
@@ -1272,9 +1271,13 @@ class NotPXBot:
             all_periods = response_json.get("allPeriods")
 
             round_periods = [
-                period for period in all_periods if period.get("PeriodType") == "round"
+                period
+                for period in all_periods
+                if period.get("PeriodType") == "round"
+                and period.get("EndTime", "")
+                > datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             ]
-            round_periods.sort(key=lambda p: p.get("EndTime", ""), reverse=True)
+            round_periods.sort(key=lambda p: p.get("EndTime", ""), reverse=False)
 
             return round_periods[0] if round_periods else None
         except Exception:
