@@ -281,9 +281,9 @@ class NotPXBot:
 
         if not is_after_start_time:
             time_to_start = round_start_time - now
-            min_sleep_time = timedelta(minutes=settings.ITERATION_SLEEP_MINUTES[0])
+            max_sleep_time = timedelta(minutes=settings.ITERATION_SLEEP_MINUTES[1])
 
-            if time_to_start <= min_sleep_time:
+            if time_to_start <= max_sleep_time:
                 next_iteration_sleep_time = time_to_start.total_seconds()
                 minutes = int(next_iteration_sleep_time // 60)
                 seconds = int(next_iteration_sleep_time % 60)
