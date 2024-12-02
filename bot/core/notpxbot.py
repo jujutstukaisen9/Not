@@ -90,7 +90,6 @@ class NotPXBot:
             "platinum": 3,
         }
         self._quests_list: List[str] = [
-            "secretWord:happy halloween",
         ]
         self._quests_to_complete: List[str] = []
         self._notpx_api_checker: NotPXAPIChecker = NotPXAPIChecker()
