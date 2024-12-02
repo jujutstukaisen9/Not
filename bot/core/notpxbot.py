@@ -1266,11 +1266,12 @@ class NotPXBot:
 
             all_periods = response_json.get("allPeriods")
 
-            for period in all_periods:
-                if period.get("PeriodType") == "round":
-                    return period
+            round_periods = [
+                period for period in all_periods if period.get("PeriodType") == "round"
+            ]
+            round_periods.sort(key=lambda p: p.get("EndTime", ""), reverse=True)
 
-            return None
+            return round_periods[0] if round_periods else None
         except Exception:
             if attempts <= 3:
                 logger.warning(
