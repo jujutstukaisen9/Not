@@ -1068,9 +1068,15 @@ class NotPXBot:
             response.raise_for_status()
             response_json = await response.json()
 
-            first_round = response_json.get("rounds", [{}])[0]
-            player_rank = first_round.get("rank", None)
-            template_rank = first_round.get("template", {}).get("rank", None)
+            rounds = response_json.get("rounds", [])
+
+            if not rounds:
+                logger.info(f"{self.session_name} | No tournament results found")
+                return
+
+            last_round = rounds[-1]
+            player_rank = last_round.get("rank", None)
+            template_rank = last_round.get("template", {}).get("rank", None)
             logger.info(
                 f"{self.session_name} | Player rank: {player_rank} | Template rank: {template_rank}"
             )
