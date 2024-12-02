@@ -335,8 +335,10 @@ class NotPXBot:
         )
 
         is_night_time = (
-            current_hour >= start_night_time or 
-            current_hour <= end_night_time
+            (start_night_time <= current_hour <= 23)
+            or (0 <= current_hour <= end_night_time)
+            if start_night_time > end_night_time
+            else (start_night_time <= current_hour <= end_night_time)
         )
 
         if is_night_time:
@@ -344,12 +346,16 @@ class NotPXBot:
                 settings.ADDITIONAL_NIGHT_SLEEP_MINUTES[0],
                 settings.ADDITIONAL_NIGHT_SLEEP_MINUTES[1],
             )
-            
-            if current_hour >= start_night_time:
+
+            sleep_time_in_hours = None
+
+            if start_night_time <= current_hour <= 23:
                 sleep_time_in_hours = 24 - current_hour + end_night_time
-            else:
+            elif 0 <= current_hour <= end_night_time:
                 sleep_time_in_hours = end_night_time - current_hour
-            
+            else:
+                return
+
             logger.info(
                 f"{self.session_name} | It's night time. Sleeping for: {int(sleep_time_in_hours)} hours and {random_minutes_to_sleep_time} minutes"
             )
@@ -1047,7 +1053,8 @@ class NotPXBot:
             )
 
     async def _get_tournament_results(
-        self, session: aiohttp.ClientSession,
+        self,
+        session: aiohttp.ClientSession,
         auth_url: str,
         attempts: int = 1,
     ) -> None:
@@ -1056,11 +1063,11 @@ class NotPXBot:
                 u="https://app.notpx.app/tournament"
             )
             await self._send_plausible_event(session, plausible_payload)
-        
+
             response = await session.get(
                 "https://notpx.app/api/v1/tournament/user/results",
                 headers=self._headers["notpx"],
-                ssl=settings.ENABLE_SSL
+                ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
             response_json = await response.json()
@@ -1068,14 +1075,14 @@ class NotPXBot:
             first_round = response_json.get("rounds", [{}])[0]
             player_rank = first_round.get("rank", None)
             template_rank = first_round.get("template", {}).get("rank", None)
-            logger.info(f"{self.session_name} | Player rank: {player_rank} | Template rank: {template_rank}")
+            logger.info(
+                f"{self.session_name} | Player rank: {player_rank} | Template rank: {template_rank}"
+            )
 
             plausible_payload = await self._create_plausible_payload(u=auth_url)
             await self._send_plausible_event(session, plausible_payload)
         except Exception:
-            plausible_payload = await self._create_plausible_payload(
-                u=auth_url
-            )
+            plausible_payload = await self._create_plausible_payload(u=auth_url)
             await self._send_plausible_event(session, plausible_payload)
 
             if attempts <= 3:
@@ -1092,7 +1099,7 @@ class NotPXBot:
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while getting tournament results"
             )
-    
+
     async def _set_tournament_template(
         self, session: aiohttp.ClientSession, auth_url: str, attempts: int = 1
     ) -> None:
