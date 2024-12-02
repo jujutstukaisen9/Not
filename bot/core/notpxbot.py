@@ -1,5 +1,6 @@
 import asyncio
 import io
+import json
 import random
 import re
 import sys
@@ -10,6 +11,7 @@ from time import time
 from typing import Any, Dict, List, NoReturn
 from uuid import uuid4
 
+import aiofiles
 import aiohttp
 import cv2
 import numpy as np
@@ -78,7 +80,7 @@ class NotPXBot:
                 "leagueBonusGold": "leagueBonusGold",
                 "leagueBonusPlatinum": "leagueBonusPlatinum",
             },
-            "click_tasks_list": {"frogApp": "frogApp"},
+            "click_tasks_list": {},
         }
         self._tasks_to_complete: Dict[str, Dict[str, str]] = {}
         self._league_weights: Dict[str, int] = {
@@ -293,19 +295,13 @@ class NotPXBot:
             settings.PAINT_PIXELS and is_after_start_time and is_before_end_time
         )
 
+        template_available = await self._check_tournament_my(session)
+
+        if not template_available:
+            await self._set_tournament_template(session, auth_url)
+
         if should_paint_pixels:
-            template_available = await self._check_tournament_my(session)
-            if not template_available:
-                await self._set_tournament_template(session, auth_url)
-                template_available = await self._check_tournament_my(session)
-                if not template_available:
-                    logger.error(
-                        f"{self.session_name} | Could not set tournament template."
-                    )
-                else:
-                    await self._paint_pixels(session)
-            else:
-                await self._paint_pixels(session)
+            await self._paint_pixels(session)
 
         if settings.CLAIM_PX:
             await self._claim_px(session)
@@ -617,7 +613,7 @@ class NotPXBot:
                 headers=self._headers["notpx"],
                 ssl=settings.ENABLE_SSL,
             )
-            if response.status == 404:
+            if response.status == 409 or response.status == 404:
                 return False
             elif response.status == 200:
                 response_json = await response.json()
@@ -868,7 +864,7 @@ class NotPXBot:
                     canvas_y = self.template_y + ty
                     pixels_to_paint.append((tx, ty, canvas_x, canvas_y))
 
-            if settings.TRY_TO_USE_ALL_CHARGES:
+            if settings.USE_ALL_CHARGES:
                 while self._charges > 0:
                     random.shuffle(pixels_to_paint)
                     for tx, ty, canvas_x, canvas_y in pixels_to_paint:
@@ -1109,15 +1105,33 @@ class NotPXBot:
             )
             await self._send_plausible_event(session, plausible_payload)
 
+            async with aiofiles.open("templates_pool.json", "r") as file:
+                templates_pool = json.loads(await file.read())
+                template_ids = templates_pool.get("ids")
+
+            if not template_ids:
+                random_templates = await session.get(
+                    "https://notpx.app/api/v1/tournament/template/list/random?limit=16",
+                    headers=self._headers["notpx"],
+                    ssl=settings.ENABLE_SSL,
+                )
+                random_templates.raise_for_status()
+                random_templates_json = await random_templates.json()
+
+                random_template = random.choice(random_templates_json.get("list", []))
+                template_id = random_template.get("id")
+            else:
+                template_id = random.choice(template_ids)
+
             response = await session.put(
-                f"https://notpx.app/api/v1/tournament/template/subscribe/{settings.TOURNAMENT_TEMPLATE_ID}",
+                f"https://notpx.app/api/v1/tournament/template/subscribe/{template_id}",
                 headers=self._headers["notpx"],
                 ssl=settings.ENABLE_SSL,
             )
             response.raise_for_status()
 
             logger.info(
-                f"{self.session_name} | Set tournament template | Template ID: {settings.TOURNAMENT_TEMPLATE_ID}"
+                f"{self.session_name} | Set tournament template | Template ID: {template_id}"
             )
 
             plausible_payload = await self._create_plausible_payload(u=auth_url)
