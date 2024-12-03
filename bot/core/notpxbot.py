@@ -290,14 +290,16 @@ class NotPXBot:
                     f"{self.session_name} | Setting up next iteration sleep before next round: {minutes} minutes {seconds} seconds"
                 )
 
-        should_paint_pixels = (
-            settings.PAINT_PIXELS and is_after_start_time and is_before_end_time
-        )
+        is_round_active = is_after_start_time and is_before_end_time
+
+        should_paint_pixels = settings.PAINT_PIXELS and is_round_active
 
         template_available = await self._check_tournament_my(session)
 
         if not template_available or (
-            settings.RESELECT_TOURNAMENT_TEMPLATE and not self.is_template_reselected
+            settings.RESELECT_TOURNAMENT_TEMPLATE
+            and not self.is_template_reselected
+            and not is_round_active
         ):
             if settings.RESELECT_TOURNAMENT_TEMPLATE:
                 logger.info(f"{self.session_name} | Re-selecting tournament template")
