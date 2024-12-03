@@ -273,6 +273,13 @@ class NotPXBot:
             round_period["EndTime"].replace("Z", "+00:00")
         ) - timedelta(minutes=settings.ROUND_END_TIME_DELTA_MINUTES)
 
+        is_round_started = now >= datetime.fromisoformat(
+            round_period["StartTime"].replace("Z", "+00:00")
+        )
+        is_round_ended = now >= datetime.fromisoformat(
+            round_period["EndTime"].replace("Z", "+00:00")
+        )
+        
         is_after_start_time = now >= round_start_time
         is_before_end_time = now < round_end_time
 
@@ -290,9 +297,11 @@ class NotPXBot:
                     f"{self.session_name} | Setting up next iteration sleep before next round: {minutes} minutes {seconds} seconds"
                 )
 
-        is_round_active = is_after_start_time and is_before_end_time
+        is_round_active = is_round_started and not is_round_ended
 
-        should_paint_pixels = settings.PAINT_PIXELS and is_round_active
+        should_paint_pixels = (
+            settings.PAINT_PIXELS and is_after_start_time and is_before_end_time
+        )
 
         template_available = await self._check_tournament_my(session)
 
