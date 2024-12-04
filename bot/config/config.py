@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     WATCH_ADS: bool = False
     USE_ALL_CHARGES: bool = True
     RESELECT_TOURNAMENT_TEMPLATE: bool = False
+    CHECK_BOT_STATE: bool = True
 
 
 settings = Settings()  # type: ignore

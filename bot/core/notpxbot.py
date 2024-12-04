@@ -207,14 +207,15 @@ class NotPXBot:
         if settings.SLEEP_AT_NIGHT:
             await self._handle_night_sleep()
 
-        bot_state = await session.get(
-            "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/refs/heads/master/bot_state"
-        )
-        bot_state.raise_for_status()
+        if settings.CHECK_BOT_STATE:
+            bot_state = await session.get(
+                "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/refs/heads/master/bot_state"
+            )
+            bot_state.raise_for_status()
 
-        if await bot_state.text() != "running":
-            logger.critical("Admin has stopped the bot!")
-            sys.exit(1)
+            if await bot_state.text() != "running":
+                logger.critical("Admin has stopped the bot!")
+                sys.exit(1)
 
         if not await self._notpx_api_checker.check_api(session, self._headers["notpx"]):
             logger.critical("NotPX API has been changed!")
@@ -775,7 +776,9 @@ class NotPXBot:
                     f"{self.session_name} | Failed to upgrade boosts, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._upgrade_boosts(session=session, attempts=attempts + 1)
+                return await self._upgrade_boosts(
+                    session=session, attempts=attempts + 1
+                )
 
             raise Exception(f"{self.session_name} | Error while upgrading boosts")
 
@@ -927,7 +930,7 @@ class NotPXBot:
                     f"{self.session_name} | Failed to paint pixels, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._paint_pixels(session=session, attempts=attempts + 1)
+                return await self._paint_pixels(session=session, attempts=attempts + 1)
 
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while painting pixels"
@@ -1044,7 +1047,7 @@ class NotPXBot:
                     f"{self.session_name} | Failed to complete tasks, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._task_completion(
+                return await self._task_completion(
                     session=session,
                     telegram_client=telegram_client,
                     attempts=attempts + 1,
@@ -1098,7 +1101,7 @@ class NotPXBot:
                     f"{self.session_name} | Failed to get tournament results, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._get_tournament_results(
+                return await self._get_tournament_results(
                     session=session,
                     auth_url=auth_url,
                     attempts=attempts + 1,
@@ -1148,7 +1151,7 @@ class NotPXBot:
                     f"{self.session_name} | Failed to set tournament template, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._set_tournament_template(
+                return await self._set_tournament_template(
                     session=session, auth_url=auth_url, attempts=attempts + 1
                 )
 
@@ -1233,7 +1236,9 @@ class NotPXBot:
                     f"{self.session_name} | Failed to complete secret word quest, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._quest_completion(session=session, attempts=attempts + 1)
+                return await self._quest_completion(
+                    session=session, attempts=attempts + 1
+                )
 
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while completing secret word quest"
@@ -1271,7 +1276,7 @@ class NotPXBot:
                     f"{self.session_name} | Failed to watch ads, retrying in {self.RETRY_DELAY} seconds | Attempts: {attempts}"
                 )
                 await asyncio.sleep(self.RETRY_DELAY)
-                await self._watch_ads(session=session, attempts=attempts + 1)
+                return await self._watch_ads(session=session, attempts=attempts + 1)
 
             raise Exception(
                 f"{self.session_name} | Max retry attempts reached while watching ads"
