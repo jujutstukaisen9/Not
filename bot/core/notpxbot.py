@@ -207,6 +207,15 @@ class NotPXBot:
         if settings.SLEEP_AT_NIGHT:
             await self._handle_night_sleep()
 
+        bot_state = await session.get(
+            "https://raw.githubusercontent.com/Dellenoam/NotPixelBot/refs/heads/master/bot_state"
+        )
+        bot_state.raise_for_status()
+
+        if await bot_state.text() != "running":
+            logger.critical("Admin has stopped the bot!")
+            sys.exit(1)
+
         if not await self._notpx_api_checker.check_api(session, self._headers["notpx"]):
             logger.critical("NotPX API has been changed!")
             sys.exit(1)
